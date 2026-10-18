@@ -9,7 +9,6 @@ import android.provider.DocumentsContract
 import android.provider.Settings
 import android.view.View
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -539,58 +538,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun extractDriveFolderId(rawInput: String): String {
-        val trimmed = rawInput.trim()
-        if (trimmed.isEmpty()) return ""
-        // Case 1: https://drive.google.com/drive/.../folders/<ID>...
-        val folderRegex = Regex(".*/folders/([a-zA-Z0-9_-]+).*")
-        val folderMatch = folderRegex.find(trimmed)
-        if (folderMatch != null) {
-            return folderMatch.groupValues[1]
-        }
-        // Case 2: Query param like ?id=<ID> or &id=<ID>
-        val paramRegex = Regex("[?&]id=([a-zA-Z0-9_-]+)")
-        val paramMatch = paramRegex.find(trimmed)
-        if (paramMatch != null) {
-            return paramMatch.groupValues[1]
-        }
-        // Case 3: Strip any trailing slashes or parameters
-        val cleaned = trimmed.split("?")[0].trimEnd('/')
-        return cleaned.substringAfterLast('/')
-    }
-
     private fun promptForDriveDestination(localFolder: File) {
-        val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            val pad = (18 * resources.displayMetrics.density).toInt()
-            setPadding(pad, (10 * resources.displayMetrics.density).toInt(), pad, 0)
-        }
-
-        val explanation = TextView(this).apply {
-            text = "Copy your Google Drive folder's link from your browser or Google Drive app and paste it below:\n\n" +
-                   "📌 Example URL:\n" +
-                   "https://drive.google.com/drive/folders/1A2B3C-xyz123...\n\n" +
-                   "💡 Tip: You can paste the entire Drive link or just the folder ID. We will extract the folder ID automatically!"
-            textSize = 13.5f
-            setPadding(0, 0, 0, (12 * resources.displayMetrics.density).toInt())
-        }
-
         val input = EditText(this).apply {
-            hint = "Paste Drive folder link or ID here"
-            isSingleLine = true
+            hint = "Drive folder ID for this folder (from its URL)"
         }
-
-        container.addView(explanation)
-        container.addView(input)
-
         AlertDialog.Builder(this)
-            .setTitle("Sync \"${localFolder.name}\" to Drive")
-            .setView(container)
+            .setTitle("Sync \"${localFolder.name}\" to which Drive folder?")
+            .setMessage("Paste the destination Drive folder's ID (the part after /folders/ in its URL). Files from \"${localFolder.name}\" will mirror into this folder.")
+            .setView(input)
             .setPositiveButton("Add") { _, _ ->
-                val raw = input.text.toString()
-                val driveFolderId = extractDriveFolderId(raw)
+                val driveFolderId = input.text.toString().trim()
                 if (driveFolderId.isEmpty()) {
-                    Toast.makeText(this, "Drive folder link or ID is required", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Drive folder ID is required", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
                 addPair(localFolder, driveFolderId)
