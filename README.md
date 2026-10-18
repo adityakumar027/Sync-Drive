@@ -63,9 +63,9 @@ Sync Drive is ready to use out-of-the-box on any Android device (Android 8.0+). 
 ### 1. Download & Install
 Download the pre-built application directly onto your Android device:
 
-👉 **[Download Sync Drive v1.1.0 (APK)](https://github.com/adityakumar027/Sync-Drive/releases/download/v1.1.0/SyncDrive-v1.1-debug.apk)**
+👉 **[Download Sync Drive v1.2.0 (APK)](https://github.com/adityakumar027/Sync-Drive/releases/download/v1.2.0/SyncDrive-v1.2-debug.apk)**
 
-*(Or download `SyncDrive-v1.1-debug.apk` from the latest [GitHub Release](https://github.com/adityakumar027/Sync-Drive/releases/latest)).*
+*(Or download `SyncDrive-v1.2-debug.apk` from the latest [GitHub Release](https://github.com/adityakumar027/Sync-Drive/releases/latest)).*
 
 ---
 
