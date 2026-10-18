@@ -1,10 +1,15 @@
-# 🔄 Google Drive Sync
+<div align="center">
+  <img src="assets/logo.png" width="130" height="130" alt="Google Drive Sync Logo" style="border-radius: 26px;" />
+  <h1>🔄 Google Drive Sync</h1>
+  <p><b>Mirror Android device folders to Google Drive with resilient, background multi-thread sync</b></p>
 
 [![Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://developer.android.com)
 [![API](https://img.shields.io/badge/Min%20API-26%20(Oreo)-blue.svg)](https://developer.android.com/about/versions/oreo)
 [![Kotlin](https://img.shields.io/badge/Language-Kotlin-purple.svg)](https://kotlinlang.org)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![GitHub Release](https://img.shields.io/github/v/release/adityakumar027/Google-Drive-Sync?color=blue&logo=github)](https://github.com/adityakumar027/Google-Drive-Sync/releases/latest)
+
+</div>
 
 A robust Android app that **mirrors your device folders to Google Drive** with folder structure preserved — featuring **resumable chunked uploads**, **4 simultaneous upload workers**, and **automatic retry with exponential backoff**.
 
