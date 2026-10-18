@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">DriveSyncFix</string>
+    <string name="not_signed_in">Not signed in</string>
+    <string name="sign_in">Sign In with Google</string>
+    <string name="sign_in_google">Sign in with Google</string>
+    <string name="storage_permission_header">Storage Access Required</string>
+    <string name="storage_permission_desc">DriveSync needs access to all files on your device to discover and sync files into Google Drive.</string>
+    <string name="grant_storage_permission">Grant Storage Access</string>
+    <string name="grant_storage">Grant all-files storage access</string>
+    <string name="sync_folders_header">Sync folders (device → Drive):</string>
+    <string name="add_sync_folder">+ Add sync folder</string>
+    <string name="sync_now">Sync Now</string>
+    <string name="cancel_sync">Cancel Sync</string>
+    <string name="schedule_daily">Schedule Periodic Sync</string>
+    <string name="view_sync_history">View Sync History</string>
+    <string name="sync_idle">Idle</string>
+    <string name="sync_complete">Sync Complete</string>
+    <string name="syncing">Syncing…</string>
+</resources>

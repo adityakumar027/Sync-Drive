@@ -1,0 +1,592 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?android:attr/colorBackground">
+
+    <!-- ═══════ Top App Bar (matching reference app) ═══════ -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSurface"
+        android:elevation="2dp"
+        app:title="Autosync for Google Drive"
+        app:titleTextAppearance="@style/TextAppearance.Material3.TitleMedium" />
+
+    <!-- ═══════ Main Content Tabs Container ═══════ -->
+    <FrameLayout
+        android:id="@+id/contentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- ════════════════════════════════════════════════════════════ -->
+        <!-- TAB 1: STATUS (matching reference app status_fragment.xml)  -->
+        <!-- ════════════════════════════════════════════════════════════ -->
+        <ScrollView
+            android:id="@+id/layoutTabStatus"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- ── Account Info Card ── -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardAccount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardElevation="1dp"
+                    app:cardCornerRadius="12dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Google Account"
+                            android:textStyle="bold"
+                            android:textSize="14sp"
+                            android:textColor="?attr/colorPrimary" />
+
+                        <TextView
+                            android:id="@+id/tvStatus"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/not_signed_in"
+                            android:textSize="13sp"
+                            android:textColor="?android:textColorSecondary" />
+
+                        <Button
+                            android:id="@+id/btnSignIn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="@string/sign_in"
+                            style="@style/Widget.Material3.Button.TonalButton" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- ── Storage Permission Card (shown if needed) ── -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardStoragePermission"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    app:cardElevation="1dp"
+                    app:cardCornerRadius="12dp"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/storage_permission_header"
+                            android:textStyle="bold"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/storage_permission_desc"
+                            android:textSize="12sp"
+                            android:textColor="?android:textColorSecondary" />
+
+                        <Button
+                            android:id="@+id/btnGrantStorage"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="@string/grant_storage_permission"
+                            style="@style/Widget.Material3.Button.TonalButton" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- ── Sync Status Card (matching sync_status_view.xml) ── -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardSyncStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    app:cardElevation="1dp"
+                    app:cardCornerRadius="12dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/tvSyncStatusLabel"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:textSize="15sp"
+                                android:textStyle="bold"
+                                android:text="@string/sync_idle" />
+
+                            <ProgressBar
+                                android:id="@+id/progressSpinner"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:visibility="gone"
+                                style="?android:attr/progressBarStyleSmall" />
+                        </LinearLayout>
+
+                        <ProgressBar
+                            android:id="@+id/progressBarSync"
+                            android:layout_width="match_parent"
+                            android:layout_height="6dp"
+                            android:layout_marginTop="10dp"
+                            android:visibility="gone"
+                            style="@style/Widget.AppCompat.ProgressBar.Horizontal" />
+
+                        <TextView
+                            android:id="@+id/tvSyncProgress"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:textSize="12sp"
+                            android:textColor="?android:textColorSecondary"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/tvCurrentFile"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:textSize="11sp"
+                            android:textColor="?android:textColorSecondary"
+                            android:ellipsize="middle"
+                            android:singleLine="true"
+                            android:visibility="gone" />
+
+                        <!-- Active Simultaneous Transfers Section (matching transfer_view.xml) -->
+                        <LinearLayout
+                            android:id="@+id/layoutActiveTransfers"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginTop="10dp"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:id="@+id/tvActiveTransfersTitle"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:textColor="?attr/colorPrimary"
+                                android:text="Active Uploads (4 simultaneous)" />
+
+                            <!-- Slot 0 -->
+                            <LinearLayout
+                                android:id="@+id/slot0"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginTop="6dp"
+                                android:visibility="gone">
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal">
+                                    <TextView
+                                        android:id="@+id/tvSlot0Name"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:textSize="12sp"
+                                        android:singleLine="true"
+                                        android:ellipsize="middle" />
+                                    <TextView
+                                        android:id="@+id/tvSlot0Progress"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:textSize="11sp"
+                                        android:textColor="?android:textColorSecondary" />
+                                </LinearLayout>
+                                <ProgressBar
+                                    android:id="@+id/pbSlot0"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="4dp"
+                                    android:layout_marginTop="2dp"
+                                    style="@style/Widget.AppCompat.ProgressBar.Horizontal" />
+                            </LinearLayout>
+
+                            <!-- Slot 1 -->
+                            <LinearLayout
+                                android:id="@+id/slot1"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginTop="6dp"
+                                android:visibility="gone">
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal">
+                                    <TextView
+                                        android:id="@+id/tvSlot1Name"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:textSize="12sp"
+                                        android:singleLine="true"
+                                        android:ellipsize="middle" />
+                                    <TextView
+                                        android:id="@+id/tvSlot1Progress"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:textSize="11sp"
+                                        android:textColor="?android:textColorSecondary" />
+                                </LinearLayout>
+                                <ProgressBar
+                                    android:id="@+id/pbSlot1"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="4dp"
+                                    android:layout_marginTop="2dp"
+                                    style="@style/Widget.AppCompat.ProgressBar.Horizontal" />
+                            </LinearLayout>
+
+                            <!-- Slot 2 -->
+                            <LinearLayout
+                                android:id="@+id/slot2"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginTop="6dp"
+                                android:visibility="gone">
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal">
+                                    <TextView
+                                        android:id="@+id/tvSlot2Name"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:textSize="12sp"
+                                        android:singleLine="true"
+                                        android:ellipsize="middle" />
+                                    <TextView
+                                        android:id="@+id/tvSlot2Progress"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:textSize="11sp"
+                                        android:textColor="?android:textColorSecondary" />
+                                </LinearLayout>
+                                <ProgressBar
+                                    android:id="@+id/pbSlot2"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="4dp"
+                                    android:layout_marginTop="2dp"
+                                    style="@style/Widget.AppCompat.ProgressBar.Horizontal" />
+                            </LinearLayout>
+
+                            <!-- Slot 3 -->
+                            <LinearLayout
+                                android:id="@+id/slot3"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginTop="6dp"
+                                android:visibility="gone">
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal">
+                                    <TextView
+                                        android:id="@+id/tvSlot3Name"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:textSize="12sp"
+                                        android:singleLine="true"
+                                        android:ellipsize="middle" />
+                                    <TextView
+                                        android:id="@+id/tvSlot3Progress"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:textSize="11sp"
+                                        android:textColor="?android:textColorSecondary" />
+                                </LinearLayout>
+                                <ProgressBar
+                                    android:id="@+id/pbSlot3"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="4dp"
+                                    android:layout_marginTop="2dp"
+                                    style="@style/Widget.AppCompat.ProgressBar.Horizontal" />
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <!-- Summary row: uploaded / skipped / failed -->
+                        <LinearLayout
+                            android:id="@+id/layoutSyncSummary"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="horizontal"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:id="@+id/tvUploaded"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:textSize="12sp"
+                                android:textColor="#4CAF50"
+                                android:text="↑ 0 uploaded" />
+
+                            <TextView
+                                android:id="@+id/tvSkipped"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:textSize="12sp"
+                                android:textColor="#FF9800"
+                                android:textAlignment="center"
+                                android:text="⊘ 0 skipped" />
+
+                            <TextView
+                                android:id="@+id/tvFailed"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:textSize="12sp"
+                                android:textColor="#F44336"
+                                android:textAlignment="viewEnd"
+                                android:text="✕ 0 failed" />
+                        </LinearLayout>
+
+                        <!-- Retry Failed Files Button -->
+                        <Button
+                            android:id="@+id/btnRetryFailed"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="Retry Failed Files"
+                            android:textColor="#F44336"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:visibility="gone" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- ── Action Buttons ── -->
+                <Button
+                    android:id="@+id/btnSyncNow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/sync_now"
+                    style="@style/Widget.Material3.Button" />
+
+                <Button
+                    android:id="@+id/btnScheduleDaily"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/schedule_daily"
+                    style="@style/Widget.Material3.Button.OutlinedButton" />
+
+                <!-- Hidden legacy button so code references don't break -->
+                <Button
+                    android:id="@+id/btnViewHistory"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- ════════════════════════════════════════════════════════════ -->
+        <!-- TAB 2: SYNCED FOLDERS (matching folder_pairs_fragment.xml)  -->
+        <!-- ════════════════════════════════════════════════════════════ -->
+        <LinearLayout
+            android:id="@+id/layoutTabFolders"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Synced Folders"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Tap a folder pair to inspect files backup status"
+                android:textSize="12sp"
+                android:textColor="?android:textColorSecondary" />
+
+            <ListView
+                android:id="@+id/lvSyncPairs"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_marginTop="12dp"
+                android:divider="@null"
+                android:dividerHeight="8dp" />
+
+            <Button
+                android:id="@+id/btnAddSyncFolder"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="+ Add Sync Folder Pair"
+                style="@style/Widget.Material3.Button.TonalButton" />
+
+        </LinearLayout>
+
+        <!-- ════════════════════════════════════════════════════════════ -->
+        <!-- TAB 3: SYNC HISTORY (matching sync_history_fragment.xml)    -->
+        <!-- ════════════════════════════════════════════════════════════ -->
+        <LinearLayout
+            android:id="@+id/layoutTabHistory"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- Filter chips -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipGroupMain"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipAllMain"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="All"
+                        android:checked="true"
+                        style="@style/Widget.Material3.Chip.Filter" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipUploadedMain"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Uploaded"
+                        style="@style/Widget.Material3.Chip.Filter" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipSkippedMain"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Skipped"
+                        style="@style/Widget.Material3.Chip.Filter" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipFailedMain"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Failed"
+                        style="@style/Widget.Material3.Chip.Filter" />
+
+                </com.google.android.material.chip.ChipGroup>
+            </HorizontalScrollView>
+
+            <!-- Empty state -->
+            <TextView
+                android:id="@+id/tvEmptyHistoryMain"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No sync history yet.\nRun a sync to see records here."
+                android:textAlignment="center"
+                android:textColor="?android:textColorSecondary"
+                android:padding="32dp"
+                android:visibility="gone" />
+
+            <!-- Sync log list -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvSyncLogsMain"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:padding="8dp" />
+
+            <!-- Action buttons at bottom of history -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingBottom="8dp">
+
+                <Button
+                    android:id="@+id/btnRetryFailedTabHistory"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Retry Failed Files"
+                    android:textColor="#F44336"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:visibility="gone" />
+
+                <Button
+                    android:id="@+id/btnClearHistoryMain"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Clear History"
+                    style="@style/Widget.Material3.Button.TextButton" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <!-- ═══════ Bottom Navigation (Status | Synced Folders | History) ═══════ -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorSurface"
+        app:elevation="8dp"
+        app:menu="@menu/bottom_nav_menu"
+        app:labelVisibilityMode="labeled" />
+
+</LinearLayout>

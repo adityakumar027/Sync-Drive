@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="uploaded_green">#4CAF50</color>
+    <color name="skipped_orange">#FF9800</color>
+    <color name="failed_red">#F44336</color>
+    <color name="status_syncing">#2196F3</color>
+</resources>
