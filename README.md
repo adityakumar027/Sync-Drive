@@ -4,6 +4,7 @@
 [![API](https://img.shields.io/badge/Min%20API-26%20(Oreo)-blue.svg)](https://developer.android.com/about/versions/oreo)
 [![Kotlin](https://img.shields.io/badge/Language-Kotlin-purple.svg)](https://kotlinlang.org)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![GitHub Release](https://img.shields.io/github/v/release/adityakumar027/Google-Drive-Sync?color=blue&logo=github)](https://github.com/adityakumar027/Google-Drive-Sync/releases/latest)
 
 A robust Android app that **mirrors your device folders to Google Drive** with folder structure preserved — featuring **resumable chunked uploads**, **4 simultaneous upload workers**, and **automatic retry with exponential backoff**.
 
@@ -52,9 +53,11 @@ Built to solve the #1 problem with lightweight sync apps: **large files (>20 MB)
 
 ## 📥 Quick Install
 
-Download the latest debug APK from the [releases folder](releases/):
+Download the pre-built debug APK directly from GitHub Releases:
 
-→ **[DriveSyncFix-v1.0-debug.apk](releases/DriveSyncFix-v1.0-debug.apk)**
+→ **[Download DriveSyncFix-v1.0-debug.apk](https://github.com/adityakumar027/Google-Drive-Sync/releases/download/v1.0.0/DriveSyncFix-v1.0-debug.apk)**
+
+Or find it in the repository under [`releases/DriveSyncFix-v1.0-debug.apk`](releases/DriveSyncFix-v1.0-debug.apk).
 
 > ⚠️ You must complete the [One-Time Setup](#-one-time-setup) below before the app will work — it requires your own Google Cloud OAuth credentials.
 
