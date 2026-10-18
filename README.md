@@ -56,69 +56,69 @@ Built to solve the #1 problem with lightweight sync apps: **large files (>20 MB)
 
 ---
 
-## 📥 Quick Install
+## 📥 Download & Quick Start
 
-Download the pre-built debug APK directly from GitHub Releases:
+Sync Drive is ready to use out-of-the-box on any Android device (Android 8.0+). No building or developer accounts required.
 
-→ **[Download DriveSyncFix-v1.0-debug.apk](https://github.com/adityakumar027/Sync-Drive/releases/download/v1.0.0/DriveSyncFix-v1.0-debug.apk)**
+### 1. Download & Install
+Download the pre-built application directly onto your Android device:
 
-Or find it in the repository under [`releases/DriveSyncFix-v1.0-debug.apk`](releases/DriveSyncFix-v1.0-debug.apk).
+👉 **[Download Sync Drive v1.0.0 (APK)](https://github.com/adityakumar027/Sync-Drive/releases/download/v1.0.0/DriveSyncFix-v1.0-debug.apk)**
 
-> ⚠️ You must complete the [One-Time Setup](#-one-time-setup) below before the app will work — it requires your own Google Cloud OAuth credentials.
+*(Or download `DriveSyncFix-v1.0-debug.apk` from the latest [GitHub Release](https://github.com/adityakumar027/Sync-Drive/releases/latest)).*
 
 ---
 
-## 🔧 One-Time Setup
+### 2. Sign In with Google
+1. Open **Sync Drive** on your device.
+2. Tap **"Sign In with Google"** and select your Google account.
+3. *First-time sign-in:* Tap **Advanced** → **Go to Sync Drive (unsafe)** → **Allow**.
 
-This app has **no bundled credentials** — you must register your own OAuth client in Google Cloud Console (takes ~5 minutes):
+---
 
-### 1. Create a Google Cloud Project
-- Go to [console.cloud.google.com](https://console.cloud.google.com) → **New Project**
+### 3. Grant Storage Access
+Tap **"Grant Storage Access"** when prompted so the app can discover and read the files you choose to mirror.
 
-### 2. Enable the Drive API
-- **APIs & Services** → **Library** → search "Google Drive API" → **Enable**
+---
 
-### 3. Configure OAuth Consent Screen
-- **APIs & Services** → **OAuth consent screen** → **External** (or Internal if you have Workspace)
-- Fill in app name (`Sync Drive`) and email → **Save**
-- Add yourself as a **test user** (avoids needing Google review for personal use)
+### 4. Set Up Folder Sync
+1. Tap **"+ Add Sync Folder"**.
+2. Pick any folder on your phone (e.g., `DCIM/Camera`, `Pictures`, `Documents`, or `Downloads`).
+3. Enter your destination **Google Drive Folder ID** (found in your Drive folder's URL):
+   ```
+   https://drive.google.com/drive/folders/1A2B3C4D5E6F7G8H...
+                                          ^^^^^^^^^^^^^^^^
+   ```
+4. Tap **"Sync Now"** to start your backup, or tap **"Schedule Periodic Sync"** for automated background backups!
 
-### 4. Create an OAuth Client ID
-- **APIs & Services** → **Credentials** → **Create Credentials** → **OAuth client ID**
-- Application type: **Android**
-- Package name: `com.example.drivesyncfix`
-- SHA-1 fingerprint — get it by running:
-  ```bash
-  keytool -list -v -keystore ~/.android/debug.keystore \
-    -alias androiddebugkey -storepass android -keypass android
-  ```
-- Paste the SHA-1 into the console
+---
 
-> No `google-services.json` is needed — the app uses manual `GoogleSignInOptions` setup. But the client ID **must** be registered against this exact package name + SHA-1 or sign-in will fail.
+<details>
+<summary>🛠️ <b>For Developers: Build from Source & Self-Hosting</b> (Click to expand)</summary>
 
-### 5. Build & Run
+### Prerequisites
+- Android Studio Hedgehog (2023.1.1) or newer
+- JDK 17+
+- Android SDK 26+
+
+### Clone & Build
 ```bash
-# Clone the repo
 git clone https://github.com/adityakumar027/Sync-Drive.git
 cd Sync-Drive
 
-# Open in Android Studio (Hedgehog+), let Gradle sync, then run on device
-# Or build from command line:
+# Build debug APK
 ./gradlew assembleDebug
 ```
+The output APK will be generated at `app/build/outputs/apk/debug/app-debug.apk`.
 
----
+### Registering Your Own OAuth Client
+If you fork this project or build with your own debug keystore, register your SHA-1 in your own Google Cloud Console:
+1. Enable Google Drive API in Google Cloud Console.
+2. Create an Android OAuth 2.0 Client ID with:
+   - Package name: `com.example.drivesyncfix`
+   - SHA-1: From your keystore (`keytool -list -v -keystore ~/.android/debug.keystore`)
 
-## 📱 How to Use
-
-1. **Sign in** with your Google account and grant all-files storage access
-2. Tap **"+ Add Sync Folder"** → choose a device folder (DCIM, Downloads, or browse/type any path)
-3. Enter the **destination Drive folder ID** — get it from the folder's URL:
-   ```
-   https://drive.google.com/drive/folders/<THIS_PART>
-   ```
-4. Repeat for as many folders as you want synced
-5. Tap **"Sync Now"** or **"Schedule Periodic Sync"** (daily, WiFi-only)
+</details>
 
 ---
 
