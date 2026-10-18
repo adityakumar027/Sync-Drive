@@ -1,11 +1,11 @@
-# Privacy Policy for Google Drive Sync
+# Privacy Policy for Sync Drive
 
 **Effective Date:** October 18, 2026  
 **Last Updated:** October 18, 2026
 
-Google Drive Sync ("we", "our", or "the app") is an open-source Android application designed to mirror local device folders to your Google Drive account.
+Sync Drive ("we", "our", or "the app") is an open-source Android application designed to mirror local device folders to your Google Drive account.
 
-We value your privacy. This policy outlines how your information is handled when using Google Drive Sync.
+We value your privacy. This policy outlines how your information is handled when using Sync Drive.
 
 ---
 
@@ -28,7 +28,7 @@ We value your privacy. This policy outlines how your information is handled when
 
 ## 3. Google API Limited Use Disclosure
 
-Google Drive Sync's use and transfer to any other app of information received from Google APIs will adhere to the [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy), including the **Limited Use** requirements.
+Sync Drive's use and transfer to any other app of information received from Google APIs will adhere to the [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy), including the **Limited Use** requirements.
 
 Specifically:
 - We do not use Google user data to serve advertisements.
@@ -55,12 +55,12 @@ Specifically:
 
 ## 6. Open Source & Transparency
 
-Google Drive Sync is free, open-source software. You can inspect the source code and verify our privacy and security practices at:  
-[https://github.com/adityakumar027/Google-Drive-Sync](https://github.com/adityakumar027/Google-Drive-Sync)
+Sync Drive is free, open-source software. You can inspect the source code and verify our privacy and security practices at:  
+[https://github.com/adityakumar027/Sync-Drive](https://github.com/adityakumar027/Sync-Drive)
 
 ---
 
 ## 7. Contact Us
 
 If you have questions about this Privacy Policy, please contact the developer via GitHub Issues at:  
-[https://github.com/adityakumar027/Google-Drive-Sync/issues](https://github.com/adityakumar027/Google-Drive-Sync/issues)
+[https://github.com/adityakumar027/Sync-Drive/issues](https://github.com/adityakumar027/Sync-Drive/issues)

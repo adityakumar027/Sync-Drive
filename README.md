@@ -1,13 +1,13 @@
 <div align="center">
-  <img src="assets/logo.png" width="130" height="130" alt="Google Drive Sync Logo" style="border-radius: 26px;" />
-  <h1>🔄 Google Drive Sync</h1>
+  <img src="assets/logo.png" width="130" height="130" alt="Sync Drive Logo" style="border-radius: 26px;" />
+  <h1>🔄 Sync Drive</h1>
   <p><b>Mirror Android device folders to Google Drive with resilient, background multi-thread sync</b></p>
 
 [![Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://developer.android.com)
 [![API](https://img.shields.io/badge/Min%20API-26%20(Oreo)-blue.svg)](https://developer.android.com/about/versions/oreo)
 [![Kotlin](https://img.shields.io/badge/Language-Kotlin-purple.svg)](https://kotlinlang.org)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![GitHub Release](https://img.shields.io/github/v/release/adityakumar027/Google-Drive-Sync?color=blue&logo=github)](https://github.com/adityakumar027/Google-Drive-Sync/releases/latest)
+[![GitHub Release](https://img.shields.io/github/v/release/adityakumar027/Sync-Drive?color=blue&logo=github)](https://github.com/adityakumar027/Sync-Drive/releases/latest)
 
 </div>
 
@@ -60,7 +60,7 @@ Built to solve the #1 problem with lightweight sync apps: **large files (>20 MB)
 
 Download the pre-built debug APK directly from GitHub Releases:
 
-→ **[Download DriveSyncFix-v1.0-debug.apk](https://github.com/adityakumar027/Google-Drive-Sync/releases/download/v1.0.0/DriveSyncFix-v1.0-debug.apk)**
+→ **[Download DriveSyncFix-v1.0-debug.apk](https://github.com/adityakumar027/Sync-Drive/releases/download/v1.0.0/DriveSyncFix-v1.0-debug.apk)**
 
 Or find it in the repository under [`releases/DriveSyncFix-v1.0-debug.apk`](releases/DriveSyncFix-v1.0-debug.apk).
 
@@ -80,7 +80,7 @@ This app has **no bundled credentials** — you must register your own OAuth cli
 
 ### 3. Configure OAuth Consent Screen
 - **APIs & Services** → **OAuth consent screen** → **External** (or Internal if you have Workspace)
-- Fill in app name and email → **Save**
+- Fill in app name (`Sync Drive`) and email → **Save**
 - Add yourself as a **test user** (avoids needing Google review for personal use)
 
 ### 4. Create an OAuth Client ID
@@ -99,8 +99,8 @@ This app has **no bundled credentials** — you must register your own OAuth cli
 ### 5. Build & Run
 ```bash
 # Clone the repo
-git clone https://github.com/adityakumar027/Google-Drive-Sync.git
-cd Google-Drive-Sync
+git clone https://github.com/adityakumar027/Sync-Drive.git
+cd Sync-Drive
 
 # Open in Android Studio (Hedgehog+), let Gradle sync, then run on device
 # Or build from command line:
