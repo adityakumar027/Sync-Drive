@@ -66,6 +66,16 @@
                 app:icon="@android:drawable/ic_menu_rotate"
                 android:contentDescription="Quick Sync" />
 
+            <!-- Theme Switcher (Light / Dark / System) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnThemeToggle"
+                style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                app:icon="@drawable/ic_theme_mode"
+                android:contentDescription="Switch Theme" />
+
         </LinearLayout>
     </com.google.android.material.appbar.MaterialToolbar>
 
@@ -500,15 +510,114 @@
                     app:cornerRadius="26dp"
                     style="@style/Widget.Material3.Button" />
 
+                <!-- ── Periodic Sync Scheduler Card with Visible ON/OFF Switch ── -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardScheduleSync"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    app:cardElevation="1dp"
+                    app:cardCornerRadius="16dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#1F808080"
+                    app:cardBackgroundColor="?attr/colorSurface">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <ImageView
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:src="@drawable/ic_schedule"
+                                app:tint="?attr/colorPrimary"
+                                android:contentDescription="Schedule" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:layout_marginStart="12dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Periodic Background Sync"
+                                    android:textSize="15sp"
+                                    android:textStyle="bold"
+                                    android:textColor="?android:textColorPrimary" />
+
+                                <TextView
+                                    android:id="@+id/tvScheduleStatus"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="⚪ Off • Tap switch to enable"
+                                    android:textSize="12sp"
+                                    android:textColor="?android:textColorSecondary"
+                                    android:layout_marginTop="2dp" />
+                            </LinearLayout>
+
+                            <!-- Visible ON / OFF Switch -->
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switchScheduleSync"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" />
+                        </LinearLayout>
+
+                        <!-- Frequency & Network Options (visible when ON) -->
+                        <LinearLayout
+                            android:id="@+id/layoutScheduleOptions"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="12dp"
+                            android:visibility="gone"
+                            android:gravity="center_vertical">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnScheduleInterval"
+                                style="@style/Widget.Material3.Button.TonalButton"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp"
+                                android:layout_weight="1"
+                                android:text="Every 24h"
+                                android:textSize="12sp"
+                                app:icon="@android:drawable/ic_menu_recent_history"
+                                app:iconSize="16dp"
+                                app:cornerRadius="20dp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnScheduleNetwork"
+                                style="@style/Widget.Material3.Button.TonalButton"
+                                android:layout_width="0dp"
+                                android:layout_height="40dp"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:text="Any Network"
+                                android:textSize="12sp"
+                                app:icon="@android:drawable/ic_menu_preferences"
+                                app:iconSize="16dp"
+                                app:cornerRadius="20dp" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Hidden legacy button so any existing references don't break -->
                 <Button
                     android:id="@+id/btnScheduleDaily"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="10dp"
-                    android:text="@string/schedule_daily"
-                    android:textSize="14sp"
-                    app:cornerRadius="24dp"
-                    style="@style/Widget.Material3.Button.OutlinedButton" />
+                    android:layout_height="wrap_content"
+                    android:visibility="gone" />
 
                 <!-- Hidden legacy button so code references don't break -->
                 <Button

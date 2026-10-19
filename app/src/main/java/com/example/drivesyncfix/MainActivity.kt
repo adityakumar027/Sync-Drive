@@ -2,6 +2,7 @@ package com.example.drivesyncfix
 
 import android.app.AlertDialog
 import android.content.ContentUris
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -99,6 +100,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnScheduleDaily.setOnClickListener { scheduleDailySync() }
+        binding.btnThemeToggle.setOnClickListener { showThemeSelectionDialog() }
+        setupPeriodicSyncUi()
 
         binding.btnViewHistory.setOnClickListener {
             switchTab(2)
@@ -214,6 +217,7 @@ class MainActivity : AppCompatActivity() {
         }
         binding.btnSyncNow.isEnabled = account != null
         binding.btnScheduleDaily.isEnabled = account != null
+        binding.switchScheduleSync.isEnabled = account != null
         binding.btnHeaderSync.isEnabled = account != null
 
         // Show/hide storage permission card
@@ -868,17 +872,186 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, "Sync cancelled", Toast.LENGTH_SHORT).show()
     }
 
-    private fun scheduleDailySync() {
-        val request = PeriodicWorkRequestBuilder<SyncWorker>(1, TimeUnit.DAYS)
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.UNMETERED)
-                    .build()
-            )
+    companion object {
+        const val WORK_NAME_PERIODIC_SYNC = "daily_sync"
+        private const val PREFS_PERIODIC = "syncdrive_periodic_prefs"
+        private const val KEY_PERIODIC_ENABLED = "periodic_enabled"
+        private const val KEY_PERIODIC_INTERVAL = "periodic_interval_hours"
+        private const val KEY_PERIODIC_WIFI_ONLY = "periodic_wifi_only"
+    }
+
+    private fun getPeriodicIntervalHours(): Int {
+        val prefs = getSharedPreferences(PREFS_PERIODIC, Context.MODE_PRIVATE)
+        return prefs.getInt(KEY_PERIODIC_INTERVAL, 24)
+    }
+
+    private fun getPeriodicWifiOnly(): Boolean {
+        val prefs = getSharedPreferences(PREFS_PERIODIC, Context.MODE_PRIVATE)
+        return prefs.getBoolean(KEY_PERIODIC_WIFI_ONLY, false)
+    }
+
+    private fun setupPeriodicSyncUi() {
+        val prefs = getSharedPreferences(PREFS_PERIODIC, Context.MODE_PRIVATE)
+        val isEnabled = prefs.getBoolean(KEY_PERIODIC_ENABLED, false)
+        val intervalHours = getPeriodicIntervalHours()
+        val wifiOnly = getPeriodicWifiOnly()
+
+        // Set initial state without triggering listener
+        binding.switchScheduleSync.setOnCheckedChangeListener(null)
+        binding.switchScheduleSync.isChecked = isEnabled
+        updateScheduleUi(isEnabled, intervalHours, wifiOnly)
+
+        binding.switchScheduleSync.setOnCheckedChangeListener { _, checked ->
+            if (checked) {
+                val account = AuthManager.getLastSignedInAccount(this)
+                if (account == null) {
+                    binding.switchScheduleSync.isChecked = false
+                    Toast.makeText(this, "Please connect Google account first", Toast.LENGTH_SHORT).show()
+                    return@setOnCheckedChangeListener
+                }
+                enablePeriodicSync(getPeriodicIntervalHours(), getPeriodicWifiOnly())
+            } else {
+                disablePeriodicSync()
+            }
+        }
+
+        binding.btnScheduleInterval.setOnClickListener {
+            showIntervalPicker()
+        }
+
+        binding.btnScheduleNetwork.setOnClickListener {
+            showNetworkPicker()
+        }
+    }
+
+    private fun enablePeriodicSync(intervalHours: Int, wifiOnly: Boolean) {
+        val networkType = if (wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(networkType)
             .build()
+
+        val request = PeriodicWorkRequestBuilder<SyncWorker>(intervalHours.toLong(), TimeUnit.HOURS)
+            .setConstraints(constraints)
+            .build()
+
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "daily_sync", ExistingPeriodicWorkPolicy.UPDATE, request
+            WORK_NAME_PERIODIC_SYNC,
+            ExistingPeriodicWorkPolicy.UPDATE,
+            request
         )
-        Toast.makeText(this, "Daily WiFi sync scheduled ✓", Toast.LENGTH_SHORT).show()
+
+        val prefs = getSharedPreferences(PREFS_PERIODIC, Context.MODE_PRIVATE)
+        prefs.edit()
+            .putBoolean(KEY_PERIODIC_ENABLED, true)
+            .putInt(KEY_PERIODIC_INTERVAL, intervalHours)
+            .putBoolean(KEY_PERIODIC_WIFI_ONLY, wifiOnly)
+            .apply()
+
+        updateScheduleUi(true, intervalHours, wifiOnly)
+        val netStr = if (wifiOnly) "WiFi only" else "Any network"
+        Toast.makeText(this, "Periodic sync scheduled: every ${intervalHours}h ($netStr) ✓", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun disablePeriodicSync() {
+        WorkManager.getInstance(this).cancelUniqueWork(WORK_NAME_PERIODIC_SYNC)
+        val prefs = getSharedPreferences(PREFS_PERIODIC, Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(KEY_PERIODIC_ENABLED, false).apply()
+        updateScheduleUi(false, getPeriodicIntervalHours(), getPeriodicWifiOnly())
+        Toast.makeText(this, "Periodic background sync disabled", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun updateScheduleUi(enabled: Boolean, intervalHours: Int, wifiOnly: Boolean) {
+        val netDesc = if (wifiOnly) "WiFi only" else "Any network"
+        val intervalDesc = when (intervalHours) {
+            1 -> "Every 1h"
+            3 -> "Every 3h"
+            6 -> "Every 6h"
+            12 -> "Every 12h"
+            else -> "Every 24h"
+        }
+
+        if (enabled) {
+            binding.tvScheduleStatus.text = "🟢 Active • $intervalDesc ($netDesc)"
+            binding.layoutScheduleOptions.visibility = View.VISIBLE
+        } else {
+            binding.tvScheduleStatus.text = "⚪ Off • Tap switch to enable"
+            binding.layoutScheduleOptions.visibility = View.GONE
+        }
+        binding.btnScheduleInterval.text = intervalDesc
+        binding.btnScheduleNetwork.text = if (wifiOnly) "WiFi Only" else "Any Network"
+    }
+
+    private fun showIntervalPicker() {
+        val options = arrayOf("Every 1 hour", "Every 3 hours", "Every 6 hours", "Every 12 hours", "Every 24 hours (Daily)")
+        val hours = arrayOf(1, 3, 6, 12, 24)
+        val currentHours = getPeriodicIntervalHours()
+        val currentIndex = hours.indexOf(currentHours).let { if (it >= 0) it else 4 }
+
+        AlertDialog.Builder(this)
+            .setTitle("Sync Frequency")
+            .setSingleChoiceItems(options, currentIndex) { dialog, which ->
+                val selectedHour = hours[which]
+                val prefs = getSharedPreferences(PREFS_PERIODIC, Context.MODE_PRIVATE)
+                prefs.edit().putInt(KEY_PERIODIC_INTERVAL, selectedHour).apply()
+                if (binding.switchScheduleSync.isChecked) {
+                    enablePeriodicSync(selectedHour, getPeriodicWifiOnly())
+                } else {
+                    updateScheduleUi(false, selectedHour, getPeriodicWifiOnly())
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showNetworkPicker() {
+        val options = arrayOf("Any Network (WiFi or Mobile Data)", "WiFi Only")
+        val currentWifiOnly = getPeriodicWifiOnly()
+        val currentIndex = if (currentWifiOnly) 1 else 0
+
+        AlertDialog.Builder(this)
+            .setTitle("Network Requirement")
+            .setSingleChoiceItems(options, currentIndex) { dialog, which ->
+                val selectedWifiOnly = which == 1
+                val prefs = getSharedPreferences(PREFS_PERIODIC, Context.MODE_PRIVATE)
+                prefs.edit().putBoolean(KEY_PERIODIC_WIFI_ONLY, selectedWifiOnly).apply()
+                if (binding.switchScheduleSync.isChecked) {
+                    enablePeriodicSync(getPeriodicIntervalHours(), selectedWifiOnly)
+                } else {
+                    updateScheduleUi(false, getPeriodicIntervalHours(), selectedWifiOnly)
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showThemeSelectionDialog() {
+        val options = arrayOf("☀️ Light Mode", "🌙 Dark Mode", "🌓 System Default")
+        val modes = arrayOf(
+            ThemeManager.THEME_LIGHT,
+            ThemeManager.THEME_DARK,
+            ThemeManager.THEME_SYSTEM
+        )
+        val currentMode = ThemeManager.getThemeMode(this)
+        val selectedIndex = when (currentMode) {
+            ThemeManager.THEME_LIGHT -> 0
+            ThemeManager.THEME_DARK -> 1
+            else -> 2
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("App Theme")
+            .setSingleChoiceItems(options, selectedIndex) { dialog, which ->
+                val chosenMode = modes[which]
+                ThemeManager.setThemeMode(this, chosenMode)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun scheduleDailySync() {
+        binding.switchScheduleSync.isChecked = true
     }
 }

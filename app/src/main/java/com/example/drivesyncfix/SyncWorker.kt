@@ -113,7 +113,7 @@ class SyncWorker(
     )
 
     private suspend fun doSyncWork(): Result {
-        setForeground(createForegroundInfo("Starting sync…"))
+        safeSetForeground("Starting sync…")
 
         val db = SyncDatabase.getInstance(applicationContext)
         val syncedDao = db.syncedFileDao()
@@ -177,7 +177,7 @@ class SyncWorker(
         } else {
             // ═══════ Normal Mode: Fast local scan ═══════
             reportProgress(STATUS_SCANNING, "Scanning device for files…", "", 0, 0, 0, 0, 0)
-            setForeground(createForegroundInfo("Scanning device for files…"))
+            safeSetForeground("Scanning device for files…")
 
             val allFiles = mutableListOf<FileItem>()
             for (pair in pairs) {
@@ -211,7 +211,7 @@ class SyncWorker(
                 "Verifying $totalFiles files with Drive across $totalFolders folders…",
                 "", 0, totalFiles, 0, 0, 0
             )
-            setForeground(createForegroundInfo("Verifying with Google Drive…"))
+            safeSetForeground("Verifying with Google Drive…")
 
             for ((key, itemsInFolder) in groupedByFolder) {
                 if (isStopped) break
@@ -298,7 +298,8 @@ class SyncWorker(
 
             if (filesToUpload.isEmpty()) {
                 reportProgress(STATUS_COMPLETE, "All $totalFiles files up to date on Drive", "", totalFiles, totalFiles, 0, totalSkipped, 0)
-                setForeground(createForegroundInfo("All $totalFiles files up to date"))
+                safeSetForeground("All $totalFiles files up to date")
+                notifySyncComplete("SyncDrive", "All $totalFiles files are up to date on Drive ✓")
                 return Result.success(buildOutputData(totalFiles))
             }
         }
@@ -316,7 +317,7 @@ class SyncWorker(
             alreadySkipped,
             0
         )
-        setForeground(createForegroundInfo("Uploading $toUploadCount files (4 parallel)…"))
+        safeSetForeground("Uploading $toUploadCount files (4 parallel)…")
 
         val uploadChannel = Channel<UploadTask>(Channel.UNLIMITED)
         for (task in filesToUpload) {
@@ -444,7 +445,11 @@ class SyncWorker(
             finalSkipped,
             finalFailed
         )
-        setForeground(createForegroundInfo("Done: $finalUploaded ↑  $finalSkipped ⊘  $finalFailed ✕"))
+        safeSetForeground("Done: $finalUploaded ↑  $finalSkipped ⊘  $finalFailed ✕")
+        notifySyncComplete(
+            "SyncDrive",
+            "Sync complete: $finalUploaded uploaded, $finalSkipped skipped, $finalFailed failed"
+        )
 
         // Clean old logs
         logDao.deleteOlderThan(System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L)
@@ -535,6 +540,33 @@ class SyncWorker(
             ForegroundInfo(NOTIFICATION_ID, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
         } else {
             ForegroundInfo(NOTIFICATION_ID, notification)
+        }
+    }
+
+    private suspend fun safeSetForeground(message: String) {
+        runCatching {
+            setForeground(createForegroundInfo(message))
+        }.onFailure { e ->
+            android.util.Log.d("SyncWorker", "safeSetForeground skipped (background restrictions): ${e.message}")
+        }
+    }
+
+    private fun notifySyncComplete(title: String, message: String) {
+        runCatching {
+            val nm = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = NotificationChannel(
+                    NOTIFICATION_CHANNEL_ID, "SyncDrive Sync", NotificationManager.IMPORTANCE_DEFAULT
+                )
+                nm.createNotificationChannel(channel)
+            }
+            val notification = NotificationCompat.Builder(applicationContext, NOTIFICATION_CHANNEL_ID)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setSmallIcon(android.R.drawable.stat_sys_upload_done)
+                .setAutoCancel(true)
+                .build()
+            nm.notify(NOTIFICATION_ID + 1, notification)
         }
     }
 }

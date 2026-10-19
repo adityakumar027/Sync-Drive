@@ -12,6 +12,9 @@ Official installation binaries for **SyncDrive** (Android).
 - **Application Label**: `SyncDrive`
 
 ### Highlights in this version:
+- **Light & Dark Mode**: One-tap theme toggle in top app bar (Light, Dark, System Default) with smooth real-time theme adaptation across all activities.
+- **Interactive Periodic Background Sync**: Dedicated scheduler card with visible ON/OFF switch, customizable sync intervals (1h, 3h, 6h, 12h, 24h), and network constraints (Any Network vs WiFi only).
+- **Background Execution Safety**: Fully fixed for Android 12+ / 14+ background execution to prevent foreground service crashes, with completion notifications.
 - **Unified Branding & App Logo**: Single modern top app bar displaying **SyncDrive** and the official logo; duplicate headers removed.
 - **Launcher Icons**: Multi-density adaptive and round launcher icons (`mdpi` through `xxxhdpi`).
 - **Complete Storage Access & Scoped Storage Bypass**: In-app folder browser and direct path resolvers ensure any directory on device can be selected without "can't use this folder" errors.
