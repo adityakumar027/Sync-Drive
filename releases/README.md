@@ -12,6 +12,7 @@ Official installation binaries for **SyncDrive** (Android).
 - **Application Label**: `SyncDrive`
 
 ### Highlights in this version:
+- **Smart File & Media Filtering**: Preserves user photos, audios, videos, and documents (even if hidden with a leading dot or in folders with `.nomedia`), while cleanly skipping gallery thumbnail caches (`.thumbnails/`), OS trash (`.trashed/`), and temporary chunk files (`.chunk`, `.tmp`, `.part`).
 - **Light & Dark Mode**: One-tap theme toggle in top app bar (Light, Dark, System Default) with smooth real-time theme adaptation across all activities.
 - **Interactive Periodic Background Sync**: Dedicated scheduler card with visible ON/OFF switch, customizable sync intervals (1h, 3h, 6h, 12h, 24h), and network constraints (Any Network vs WiFi only).
 - **Background Execution Safety**: Fully fixed for Android 12+ / 14+ background execution to prevent foreground service crashes, with completion notifications.
@@ -19,7 +20,6 @@ Official installation binaries for **SyncDrive** (Android).
 - **Launcher Icons**: Multi-density adaptive and round launcher icons (`mdpi` through `xxxhdpi`).
 - **Complete Storage Access & Scoped Storage Bypass**: In-app folder browser and direct path resolvers ensure any directory on device can be selected without "can't use this folder" errors.
 - **Smart Drive Link Parsing**: Paste full Google Drive URLs or folder IDs with automatic extraction.
-- **Complete Realtime Scanning (No Skipped Files)**: 0-byte files, notes, documents, and nested files are fully scanned and synced.
 - **In-Place File Updates for Data Consistency**: Updates existing files on Drive rather than creating duplicate copies.
 - **Material 3 Interface**: Elevated cards, real-time progress indicators, transfer stats, and clean tab navigation.
 
