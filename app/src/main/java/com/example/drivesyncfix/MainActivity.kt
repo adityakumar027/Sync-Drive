@@ -102,6 +102,7 @@ class MainActivity : AppCompatActivity() {
         binding.btnScheduleDaily.setOnClickListener { scheduleDailySync() }
         binding.btnThemeToggle.setOnClickListener { showThemeSelectionDialog() }
         setupPeriodicSyncUi()
+        setupFilterSettingsUi()
 
         binding.btnViewHistory.setOnClickListener {
             switchTab(2)
@@ -1053,5 +1054,40 @@ class MainActivity : AppCompatActivity() {
 
     private fun scheduleDailySync() {
         binding.switchScheduleSync.isChecked = true
+    }
+
+    private fun setupFilterSettingsUi() {
+        val prefs = getSharedPreferences("syncdrive_filter_prefs", Context.MODE_PRIVATE)
+        val includeHidden = prefs.getBoolean("pref_include_hidden_files", true)
+
+        binding.switchIncludeHidden.isChecked = includeHidden
+        updateFilterStatusText(includeHidden)
+
+        binding.switchIncludeHidden.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean("pref_include_hidden_files", isChecked).apply()
+            updateFilterStatusText(isChecked)
+            val msg = if (isChecked) "Hidden media files will be included ✓" else "Strict mode: Hidden files skipped"
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        }
+
+        binding.cardFilterSettings.setOnClickListener {
+            showFilterInfoDialog()
+        }
+    }
+
+    private fun updateFilterStatusText(includeHidden: Boolean) {
+        binding.tvFilterStatus.text = if (includeHidden) {
+            "Include photos, audio & docs starting with dot (.)"
+        } else {
+            "Strict mode: Skip all files starting with dot (.)"
+        }
+    }
+
+    private fun showFilterInfoDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("File Filter Settings")
+            .setMessage("When enabled (Default), user photos, audio recordings, videos, and documents starting with a dot (e.g. .photo.jpg, .audio.mp3) are included in sync.\n\nWhen disabled, all files starting with a dot (.) are strictly skipped.\n\nNote: Gallery preview thumbnails (.thumbnails/), system trash, and temporary chunk files (.chunk, .tmp, .part) are ALWAYS safely excluded in both modes.")
+            .setPositiveButton("OK", null)
+            .show()
     }
 }

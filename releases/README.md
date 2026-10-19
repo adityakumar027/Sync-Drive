@@ -12,7 +12,7 @@ Official installation binaries for **SyncDrive** (Android).
 - **Application Label**: `SyncDrive`
 
 ### Highlights in this version:
-- **Smart File & Media Filtering**: Preserves user photos, audios, videos, and documents (even if hidden with a leading dot or in folders with `.nomedia`), while cleanly skipping gallery thumbnail caches (`.thumbnails/`), OS trash (`.trashed/`), and temporary chunk files (`.chunk`, `.tmp`, `.part`).
+- **Smart File & Media Filtering with User Toggle**: Built-in toggle allows users to choose whether to include hidden media files (.photo.jpg, .voice.mp3) or run in strict mode, while thumbnail preview caches (.thumbnails/), system trash (.trashed/), and chunk files (.chunk, .tmp, .part) are always safely excluded.
 - **Light & Dark Mode**: One-tap theme toggle in top app bar (Light, Dark, System Default) with smooth real-time theme adaptation across all activities.
 - **Interactive Periodic Background Sync**: Dedicated scheduler card with visible ON/OFF switch, customizable sync intervals (1h, 3h, 6h, 12h, 24h), and network constraints (Any Network vs WiFi only).
 - **Background Execution Safety**: Fully fixed for Android 12+ / 14+ background execution to prevent foreground service crashes, with completion notifications.

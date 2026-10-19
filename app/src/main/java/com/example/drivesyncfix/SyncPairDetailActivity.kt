@@ -1,5 +1,6 @@
 package com.example.drivesyncfix
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -84,7 +85,9 @@ class SyncPairDetailActivity : AppCompatActivity() {
                 return@Thread
             }
 
-            val scanner = FileScanner()
+            val filterPrefs = getSharedPreferences("syncdrive_filter_prefs", Context.MODE_PRIVATE)
+            val includeHidden = filterPrefs.getBoolean("pref_include_hidden_files", true)
+            val scanner = FileScanner(includeHidden = includeHidden)
             val scannedFiles = scanner.scan(root)
 
             runOnUiThread {

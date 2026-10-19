@@ -7,26 +7,26 @@ import java.io.File
  * to sync, with each file's path relative to that root (used to mirror the
  * folder structure into the paired Drive destination folder).
  *
- * SMART FILTERING:
- * 1. Excludes system caches, thumbnail databases, and temp chunk files that clutter Drive.
- * 2. Smart Media Inclusion: If a file is a valid photo, audio, video, or user document,
- *    it IS included even if it starts with a dot (.) or is inside a hidden/vault folder.
- * 3. Strictly excludes actual system trash and gallery thumbnail caches (.thumbnails/)
- *    to prevent uploading thousands of tiny 800-byte preview caches.
+ * FILTERING RULES:
+ * 1. Excludes system caches, thumbnail preview caches (.thumbnails/), OS trash, and temp chunk files.
+ * 2. Allows important files (images, audio, video, documents, archives) starting with a dot (.)
+ *    if [includeHidden] is enabled (Default: true).
+ * 3. Skips non-media hidden files (e.g. .nomedia, .DS_Store, extensionless dotfiles, chunk files).
  */
 class FileScanner(
+    val includeHidden: Boolean = true,
     private val excludedDirNames: Set<String> = DEFAULT_EXCLUDED_DIRS,
     private val excludedExtensions: Set<String> = DEFAULT_EXCLUDED_EXTENSIONS
 ) {
     companion object {
-        /** Directories that must ALWAYS be skipped entirely (system caches, trash, gallery thumbnails) */
+        /** Directories to skip entirely (matched against folder name or path segment) */
         val DEFAULT_EXCLUDED_DIRS = setOf(
-            // Android system & app data
+            // Android system & app data (NOT Android/media — that has user content!)
             "Android/data",
             "Android/obb",
             ".android",
 
-            // Gallery thumbnail preview caches (contains thousands of 1KB-20KB preview thumbnails)
+            // Gallery thumbnail preview caches (contains thousands of 800B-20KB preview thumbnails)
             ".thumbnails",
             ".trashed",
             ".trash",
@@ -58,26 +58,27 @@ class FileScanner(
             "node_modules"
         )
 
-        /** File extensions that must ALWAYS be skipped (temporary files, partial downloads, chunks) */
+        /** File extensions to skip (logs, temp files, partial downloads, chunks, etc.) */
         val DEFAULT_EXCLUDED_EXTENSIONS = setOf(
             "tmp", "temp", "bak", "log", "part",
             "crdownload", "download",  // partial downloads
-            "nomedia",                 // .nomedia marker files themselves (media inside folder is kept)
-            "thumb", "thumbdata",      // thumbnail index data
+            "nomedia",                 // .nomedia marker files
+            "thumb", "thumbdata",      // thumbnail data
             "pending", "partial",
-            "chunk"                    // temporary chunks
+            "chunk", "chunks", "chk", "seg"
         )
 
-        /** Recognized media and user document extensions (kept even if file is hidden/dot-prefixed) */
-        val MEDIA_AND_DOC_EXTENSIONS = setOf(
+        /** Important user file extensions (allowed if includeHidden is enabled) */
+        val ALLOWED_IMPORTANT_EXTENSIONS = setOf(
             // Images
             "jpg", "jpeg", "png", "webp", "gif", "heic", "heif", "svg", "bmp", "raw", "dng", "tiff", "ico",
             // Audio
             "mp3", "m4a", "wav", "flac", "aac", "ogg", "opus", "wma", "mid", "amr",
             // Video
-            "mp4", "mkv", "mov", "avi", "3gp", "webm", "flv", "wmv", "m4v",
+            "mp4", "mkv", "mov", "avi", "3gp", "webm", "flv", "wmv", "m4v", "ts",
             // Documents & Archives
-            "pdf", "doc", "docx", "txt", "xls", "xlsx", "ppt", "pptx", "zip", "rar", "7z", "tar", "gz"
+            "pdf", "doc", "docx", "txt", "xls", "xlsx", "ppt", "pptx", "csv", "rtf", "epub", "md",
+            "zip", "rar", "7z", "tar", "gz"
         )
     }
 
@@ -112,19 +113,23 @@ class FileScanner(
     /** Check if a directory should be skipped */
     private fun isDirExcluded(dir: File): Boolean {
         val name = dir.name
+        val lowerName = name.lowercase()
 
-        // Check exact excluded directory names (e.g. .thumbnails, .trashed, .cache, Android/data, etc.)
-        if (name in excludedDirNames || name.equals(".thumbnails", ignoreCase = true) || name.equals(".trashed", ignoreCase = true)) {
+        // 1. Skip exact excluded names
+        if (name in excludedDirNames) return true
+
+        // 2. Skip any directory that is a thumbnail, cache, or trash folder
+        if (lowerName == ".thumbnails" || lowerName == ".trashed" || lowerName == ".cache" ||
+            lowerName.contains("cache") || lowerName.contains("thumb") || lowerName.contains("trash")
+        ) {
             return true
         }
 
-        // Check path segment match (for nested patterns like "Android/data", "WhatsApp/Cache", etc.)
+        // 3. Skip by path segment match (for nested patterns like "Android/data", "WhatsApp/Cache", etc.)
         if (excludedDirNames.any { excluded -> dir.path.endsWith("/$excluded") || dir.path.contains("/$excluded/") }) {
             return true
         }
 
-        // For other directories starting with a dot (.vault, .secret, .Private), allow exploring them
-        // so any real photos, audios, and documents inside are not lost!
         return false
     }
 
@@ -133,22 +138,28 @@ class FileScanner(
         if (!file.canRead()) return true
         val name = file.name
         val ext = file.extension.lowercase()
+        val lowerName = name.lowercase()
 
-        // Always skip blacklisted temporary and chunk extensions
+        // 1. Always skip blacklisted temporary and chunk extensions
         if (ext in excludedExtensions) return true
 
-        // Always skip system thumbnail database files
-        if (name.startsWith("thumbdata") || name == ".thumbdata" || name.contains(".chunk", ignoreCase = true)) {
+        // 2. Always skip files with "chunk", ".part", or "thumbdata" in their name
+        if (lowerName.contains("chunk") || lowerName.contains(".part") || lowerName.contains("thumbdata")) {
             return true
         }
 
-        // If file starts with a dot (hidden file):
+        // 3. Always skip thumbnail database files
+        if (lowerName.startsWith("thumbdata") || lowerName == ".thumbdata") {
+            return true
+        }
+
+        // 4. If file starts with a dot:
         if (name.startsWith(".")) {
-            // If it is a known media or document (e.g. .photo.jpg, .secret_audio.mp3, .notes.pdf), KEEP IT!
-            if (ext in MEDIA_AND_DOC_EXTENSIONS) {
+            // Keep if user enabled hidden files AND it is an important user file (image, audio, video, document, archive)
+            if (includeHidden && ext in ALLOWED_IMPORTANT_EXTENSIONS) {
                 return false
             }
-            // Otherwise, it's an OS hidden file (.DS_Store, .nomedia, .bindata, etc.) -> skip it
+            // Skip other non-media dot-files (.nomedia, .DS_Store, extensionless dotfiles)
             return true
         }
 

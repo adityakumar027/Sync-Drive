@@ -130,7 +130,9 @@ class SyncWorker(
             )
         }
 
-        val scanner = FileScanner()
+        val filterPrefs = applicationContext.getSharedPreferences("syncdrive_filter_prefs", Context.MODE_PRIVATE)
+        val includeHidden = filterPrefs.getBoolean("pref_include_hidden_files", true)
+        val scanner = FileScanner(includeHidden = includeHidden)
         val uploadManager = DriveUploadManager(applicationContext) {
             AuthManager.getFreshAccessToken(applicationContext)
         }

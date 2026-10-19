@@ -37,10 +37,11 @@ Built to solve the #1 problem with lightweight sync apps: **large files (>20 MB)
 - **Batch folder verification**: Fetches folder contents from Drive in bulk and caches them in memory for $O(1)$ lookups.
 - **Fast re-sync**: Synced files are recorded in SQLite, allowing subsequent re-scans of tens of thousands of files to complete in seconds.
 
-### 🔍 Smart File & Media Filtering
-- **Preserves hidden media**: Even if photos, audio, videos, or documents are named with a leading dot (`.private_photo.jpg`, `.voice_memo.mp3`) or are inside private/hidden vault folders, Sync Drive **detects and uploads them**.
-- **Folders with `.nomedia`**: Folders hidden from the gallery app are fully scanned and synced.
-- **System cache & chunk exclusion**: Automatically filters out Android gallery thumbnail caches (`.thumbnails/`), OS trash (`.trashed/`), app caches (`.cache/`, `Android/data/`), and temporary chunk files (`.chunk`, `.tmp`, `.part`).
+### 🔍 Smart File & Media Filtering (User-Configurable)
+- **User-controlled toggle**: Choose whether to include or exclude hidden media files directly from the dashboard settings card.
+- **Preserves hidden media (Default: ON)**: Even if photos, audio, videos, or documents are named with a leading dot (`.private_photo.jpg`, `.voice_memo.mp3`) or are inside private folders, Sync Drive detects and uploads them.
+- **Strict mode (Toggle OFF)**: Strictly skips all dotfiles (`.*`) for users who only want standard visible files backed up.
+- **System cache & chunk exclusion**: In both modes, Android gallery thumbnail caches (`.thumbnails/`), OS trash (`.trashed/`), app caches (`.cache/`, `Android/data/`), and temporary chunk files (`.chunk`, `.tmp`, `.part`) are safely filtered out.
 
 ### ⏰ Interactive Periodic Background Sync
 - **Live ON/OFF Switch**: Instantly toggle background synchronization on or off.
