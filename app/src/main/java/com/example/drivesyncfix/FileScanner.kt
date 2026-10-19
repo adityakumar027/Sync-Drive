@@ -14,12 +14,12 @@ import java.io.File
  * 3. Skips non-media hidden files (e.g. .nomedia, .DS_Store, extensionless dotfiles, chunk files).
  */
 class FileScanner(
-    val includeHidden: Boolean = true,
+    val includeAllChunks: Boolean = false,
     private val excludedDirNames: Set<String> = DEFAULT_EXCLUDED_DIRS,
     private val excludedExtensions: Set<String> = DEFAULT_EXCLUDED_EXTENSIONS
 ) {
     companion object {
-        /** Directories to skip entirely (matched against folder name or path segment) */
+        /** Directories to skip in default safe mode */
         val DEFAULT_EXCLUDED_DIRS = setOf(
             // Android system & app data (NOT Android/media — that has user content!)
             "Android/data",
@@ -58,7 +58,7 @@ class FileScanner(
             "node_modules"
         )
 
-        /** File extensions to skip (logs, temp files, partial downloads, chunks, etc.) */
+        /** File extensions to skip in default safe mode */
         val DEFAULT_EXCLUDED_EXTENSIONS = setOf(
             "tmp", "temp", "bak", "log", "part",
             "crdownload", "download",  // partial downloads
@@ -68,7 +68,7 @@ class FileScanner(
             "chunk", "chunks", "chk", "seg"
         )
 
-        /** Important user file extensions (allowed if includeHidden is enabled) */
+        /** Important user file extensions (strictly allowed regardless of starting with dot or not) */
         val ALLOWED_IMPORTANT_EXTENSIONS = setOf(
             // Images
             "jpg", "jpeg", "png", "webp", "gif", "heic", "heif", "svg", "bmp", "raw", "dng", "tiff", "ico",
@@ -112,6 +112,9 @@ class FileScanner(
 
     /** Check if a directory should be skipped */
     private fun isDirExcluded(dir: File): Boolean {
+        // When includeAllChunks is ON, include all directories
+        if (includeAllChunks) return false
+
         val name = dir.name
         val lowerName = name.lowercase()
 
@@ -136,30 +139,34 @@ class FileScanner(
     /** Check if a file should be skipped */
     private fun isFileExcluded(file: File): Boolean {
         if (!file.canRead()) return true
+
+        // When includeAllChunks is ON, include ALL files irrespective of hidden, chunk, or cache
+        if (includeAllChunks) return false
+
         val name = file.name
         val ext = file.extension.lowercase()
         val lowerName = name.lowercase()
 
-        // 1. Always skip blacklisted temporary and chunk extensions
+        // 1. Skip blacklisted temporary and chunk extensions
         if (ext in excludedExtensions) return true
 
-        // 2. Always skip files with "chunk", ".part", or "thumbdata" in their name
+        // 2. Skip files with "chunk", ".part", or "thumbdata" in their name
         if (lowerName.contains("chunk") || lowerName.contains(".part") || lowerName.contains("thumbdata")) {
             return true
         }
 
-        // 3. Always skip thumbnail database files
+        // 3. Skip thumbnail database files
         if (lowerName.startsWith("thumbdata") || lowerName == ".thumbdata") {
             return true
         }
 
-        // 4. If file starts with a dot:
+        // 4. If file has an allowed important media/document extension, strictly ALLOW IT regardless of starting with dot
+        if (ext in ALLOWED_IMPORTANT_EXTENSIONS) {
+            return false
+        }
+
+        // 5. If file starts with dot (.) and is NOT an allowed extension, skip it (.nomedia, .DS_Store, etc.)
         if (name.startsWith(".")) {
-            // Keep if user enabled hidden files AND it is an important user file (image, audio, video, document, archive)
-            if (includeHidden && ext in ALLOWED_IMPORTANT_EXTENSIONS) {
-                return false
-            }
-            // Skip other non-media dot-files (.nomedia, .DS_Store, extensionless dotfiles)
             return true
         }
 

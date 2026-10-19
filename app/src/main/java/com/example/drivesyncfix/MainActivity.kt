@@ -1058,35 +1058,38 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupFilterSettingsUi() {
         val prefs = getSharedPreferences("syncdrive_filter_prefs", Context.MODE_PRIVATE)
-        val includeHidden = prefs.getBoolean("pref_include_hidden_files", true)
+        val includeAllChunks = prefs.getBoolean("pref_include_all_chunks", false)
 
-        binding.switchIncludeHidden.isChecked = includeHidden
-        updateFilterStatusText(includeHidden)
+        binding.switchIncludeHidden.isChecked = includeAllChunks
+        updateFilterStatusText(includeAllChunks)
 
         binding.switchIncludeHidden.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit().putBoolean("pref_include_hidden_files", isChecked).apply()
+            prefs.edit().putBoolean("pref_include_all_chunks", isChecked).apply()
             updateFilterStatusText(isChecked)
-            val msg = if (isChecked) "Hidden media files will be included ✓" else "Strict mode: Hidden files skipped"
+            val msg = if (isChecked) "Include all chunks & caches enabled" else "Default safe mode enabled (chunks skipped)"
             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
         }
 
         binding.cardFilterSettings.setOnClickListener {
             showFilterInfoDialog()
         }
+        binding.btnFilterInfo.setOnClickListener {
+            showFilterInfoDialog()
+        }
     }
 
-    private fun updateFilterStatusText(includeHidden: Boolean) {
-        binding.tvFilterStatus.text = if (includeHidden) {
-            "Include photos, audio & docs starting with dot (.)"
+    private fun updateFilterStatusText(includeAllChunks: Boolean) {
+        binding.tvFilterStatus.text = if (includeAllChunks) {
+            "🟢 On: Uploading all raw chunk, cache & system files"
         } else {
-            "Strict mode: Skip all files starting with dot (.)"
+            "⚪ Default: skips chunk & cache files (media files always synced)"
         }
     }
 
     private fun showFilterInfoDialog() {
         AlertDialog.Builder(this)
-            .setTitle("File Filter Settings")
-            .setMessage("When enabled (Default), user photos, audio recordings, videos, and documents starting with a dot (e.g. .photo.jpg, .audio.mp3) are included in sync.\n\nWhen disabled, all files starting with a dot (.) are strictly skipped.\n\nNote: Gallery preview thumbnails (.thumbnails/), system trash, and temporary chunk files (.chunk, .tmp, .part) are ALWAYS safely excluded in both modes.")
+            .setTitle("Chunk & System File Filter")
+            .setMessage("• Default (Off):\nAll photos, videos, audio, and documents (including files starting with a dot like .photo.jpg) are strictly synced.\n\nTemporary chunk files (.chunk, .tmp, .part) and gallery thumbnail caches (.thumbnails/) are filtered out.\n\n• Turned On:\nUploads all files unconditionally, including raw chunk files, app caches, and system preview data.")
             .setPositiveButton("OK", null)
             .show()
     }

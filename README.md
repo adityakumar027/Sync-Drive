@@ -37,11 +37,10 @@ Built to solve the #1 problem with lightweight sync apps: **large files (>20 MB)
 - **Batch folder verification**: Fetches folder contents from Drive in bulk and caches them in memory for $O(1)$ lookups.
 - **Fast re-sync**: Synced files are recorded in SQLite, allowing subsequent re-scans of tens of thousands of files to complete in seconds.
 
-### 🔍 Smart File & Media Filtering (User-Configurable)
-- **User-controlled toggle**: Choose whether to include or exclude hidden media files directly from the dashboard settings card.
-- **Preserves hidden media (Default: ON)**: Even if photos, audio, videos, or documents are named with a leading dot (`.private_photo.jpg`, `.voice_memo.mp3`) or are inside private folders, Sync Drive detects and uploads them.
-- **Strict mode (Toggle OFF)**: Strictly skips all dotfiles (`.*`) for users who only want standard visible files backed up.
-- **System cache & chunk exclusion**: In both modes, Android gallery thumbnail caches (`.thumbnails/`), OS trash (`.trashed/`), app caches (`.cache/`, `Android/data/`), and temporary chunk files (`.chunk`, `.tmp`, `.part`) are safely filtered out.
+### 🔍 Smart File & Chunk Filtering (User-Configurable)
+- **Media & Documents Always Strictly Allowed**: Any file with an allowed media or document extension (`.jpg`, `.png`, `.mp4`, `.pdf`, `.mp3`, etc.) is strictly synced, regardless of whether its name starts with a dot (`.`) or not (e.g., `.photo.jpg` is always preserved).
+- **Default Clean & Safe Mode**: Gallery preview thumbnail caches (`.thumbnails/`), OS trash (`.trashed/`), app caches (`.cache/`, `Android/data/`), non-media dotfiles, and temporary chunk files (`.chunk`, `.tmp`, `.part`, `.thumbdata`) are cleanly filtered out.
+- **Include All Chunk Files Toggle**: A small, compact toggle on the dashboard allows users who want to upload raw chunk files, temporary caches, and system previews to include all files unconditionally.
 
 ### ⏰ Interactive Periodic Background Sync
 - **Live ON/OFF Switch**: Instantly toggle background synchronization on or off.

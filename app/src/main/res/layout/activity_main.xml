@@ -63,7 +63,18 @@
                 style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                app:icon="@android:drawable/ic_menu_rotate"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:padding="0dp"
+                app:iconPadding="0dp"
+                app:iconSize="20dp"
+                app:iconGravity="textStart"
+                app:cornerRadius="20dp"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+                app:icon="@drawable/ic_header_sync"
+                app:iconTint="?attr/colorControlNormal"
                 android:contentDescription="Quick Sync" />
 
             <!-- Theme Switcher (Light / Dark / System) -->
@@ -73,7 +84,18 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginStart="8dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:padding="0dp"
+                app:iconPadding="0dp"
+                app:iconSize="20dp"
+                app:iconGravity="textStart"
+                app:cornerRadius="20dp"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
                 app:icon="@drawable/ic_theme_mode"
+                app:iconTint="?attr/colorControlNormal"
                 android:contentDescription="Switch Theme" />
 
         </LinearLayout>
@@ -612,14 +634,14 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- ── Sync File Filter Settings Card ── -->
+                <!-- ── Compact Filter Setting: Include All Chunk Files ── -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/cardFilterSettings"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    app:cardElevation="1dp"
-                    app:cardCornerRadius="16dp"
+                    android:layout_marginTop="8dp"
+                    app:cardElevation="0dp"
+                    app:cardCornerRadius="12dp"
                     app:strokeWidth="1dp"
                     app:strokeColor="#1F808080"
                     app:cardBackgroundColor="?attr/colorSurface">
@@ -627,53 +649,59 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp">
 
                         <LinearLayout
-                            android:layout_width="match_parent"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <ImageView
-                                android:layout_width="28dp"
-                                android:layout_height="28dp"
-                                android:src="@android:drawable/ic_menu_search"
-                                app:tint="?attr/colorPrimary"
-                                android:contentDescription="File Filter" />
+                            android:layout_weight="1"
+                            android:orientation="vertical">
 
                             <LinearLayout
-                                android:layout_width="0dp"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical"
-                                android:layout_marginStart="12dp">
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Include Hidden Media Files"
-                                    android:textSize="15sp"
+                                    android:text="Include All Chunk Files"
+                                    android:textSize="13sp"
                                     android:textStyle="bold"
                                     android:textColor="?android:textColorPrimary" />
 
-                                <TextView
-                                    android:id="@+id/tvFilterStatus"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Include photos, audio &amp; docs starting with dot (.)"
-                                    android:textSize="12sp"
-                                    android:textColor="?android:textColorSecondary"
-                                    android:layout_marginTop="2dp" />
+                                <ImageView
+                                    android:id="@+id/btnFilterInfo"
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
+                                    android:layout_marginStart="6dp"
+                                    android:src="@android:drawable/ic_dialog_info"
+                                    app:tint="?android:textColorSecondary"
+                                    android:contentDescription="Info" />
                             </LinearLayout>
 
-                            <com.google.android.material.materialswitch.MaterialSwitch
-                                android:id="@+id/switchIncludeHidden"
+                            <TextView
+                                android:id="@+id/tvFilterStatus"
                                 android:layout_width="wrap_content"
-                                android:layout_height="wrap_content" />
+                                android:layout_height="wrap_content"
+                                android:text="⚪ Default: skips chunk &amp; cache files (media files always synced)"
+                                android:textSize="11sp"
+                                android:textColor="?android:textColorSecondary"
+                                android:layout_marginTop="1dp" />
                         </LinearLayout>
 
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switchIncludeHidden"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:scaleX="0.85"
+                            android:scaleY="0.85" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
