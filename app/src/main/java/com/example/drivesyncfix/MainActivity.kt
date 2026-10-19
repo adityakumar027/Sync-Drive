@@ -102,7 +102,6 @@ class MainActivity : AppCompatActivity() {
         binding.btnScheduleDaily.setOnClickListener { scheduleDailySync() }
         binding.btnThemeToggle.setOnClickListener { showThemeSelectionDialog() }
         setupPeriodicSyncUi()
-        setupFilterSettingsUi()
 
         binding.btnViewHistory.setOnClickListener {
             switchTab(2)
@@ -1054,43 +1053,5 @@ class MainActivity : AppCompatActivity() {
 
     private fun scheduleDailySync() {
         binding.switchScheduleSync.isChecked = true
-    }
-
-    private fun setupFilterSettingsUi() {
-        val prefs = getSharedPreferences("syncdrive_filter_prefs", Context.MODE_PRIVATE)
-        val includeAllChunks = prefs.getBoolean("pref_include_all_chunks", false)
-
-        binding.switchIncludeHidden.isChecked = includeAllChunks
-        updateFilterStatusText(includeAllChunks)
-
-        binding.switchIncludeHidden.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit().putBoolean("pref_include_all_chunks", isChecked).apply()
-            updateFilterStatusText(isChecked)
-            val msg = if (isChecked) "Include all chunks & caches enabled" else "Default safe mode enabled (chunks skipped)"
-            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
-        }
-
-        binding.cardFilterSettings.setOnClickListener {
-            showFilterInfoDialog()
-        }
-        binding.btnFilterInfo.setOnClickListener {
-            showFilterInfoDialog()
-        }
-    }
-
-    private fun updateFilterStatusText(includeAllChunks: Boolean) {
-        binding.tvFilterStatus.text = if (includeAllChunks) {
-            "🟢 On: Uploading all raw chunk, cache & system files"
-        } else {
-            "⚪ Default: skips chunk & cache files (media files always synced)"
-        }
-    }
-
-    private fun showFilterInfoDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Chunk & System File Filter")
-            .setMessage("• Default (Off):\nAll photos, videos, audio, and documents (including files starting with a dot like .photo.jpg) are strictly synced.\n\nTemporary chunk files (.chunk, .tmp, .part) and gallery thumbnail caches (.thumbnails/) are filtered out.\n\n• Turned On:\nUploads all files unconditionally, including raw chunk files, app caches, and system preview data.")
-            .setPositiveButton("OK", null)
-            .show()
     }
 }

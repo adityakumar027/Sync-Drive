@@ -37,10 +37,9 @@ Built to solve the #1 problem with lightweight sync apps: **large files (>20 MB)
 - **Batch folder verification**: Fetches folder contents from Drive in bulk and caches them in memory for $O(1)$ lookups.
 - **Fast re-sync**: Synced files are recorded in SQLite, allowing subsequent re-scans of tens of thousands of files to complete in seconds.
 
-### 🔍 Smart File & Chunk Filtering (User-Configurable)
-- **Media & Documents Always Strictly Allowed**: Any file with an allowed media or document extension (`.jpg`, `.png`, `.mp4`, `.pdf`, `.mp3`, etc.) is strictly synced, regardless of whether its name starts with a dot (`.`) or not (e.g., `.photo.jpg` is always preserved).
-- **Default Clean & Safe Mode**: Gallery preview thumbnail caches (`.thumbnails/`), OS trash (`.trashed/`), app caches (`.cache/`, `Android/data/`), non-media dotfiles, and temporary chunk files (`.chunk`, `.tmp`, `.part`, `.thumbdata`) are cleanly filtered out.
-- **Include All Chunk Files Toggle**: A small, compact toggle on the dashboard allows users who want to upload raw chunk files, temporary caches, and system previews to include all files unconditionally.
+### 🔍 High-Performance File Filtering (Original Fast Rules)
+- **Zero Chunk & Cache Leaks**: Strictly skips all hidden directories (`.*`) such as `.thumbnails/`, `.trashed/`, `.cache/`, and `.facebook/` at the directory traversal level, ensuring the scanner finishes in seconds and never leaks thousands of thumbnail/chunk files.
+- **Hidden & Temp Files Filtered**: Files starting with a dot (`.*`), thumbnail database files (`thumbdata*`), and temporary extensions (`.tmp`, `.part`, `.nomedia`, `.crdownload`, etc.) are cleanly and instantly skipped.
 
 ### ⏰ Interactive Periodic Background Sync
 - **Live ON/OFF Switch**: Instantly toggle background synchronization on or off.

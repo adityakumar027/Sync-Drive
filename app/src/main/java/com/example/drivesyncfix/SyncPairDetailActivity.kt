@@ -85,9 +85,7 @@ class SyncPairDetailActivity : AppCompatActivity() {
                 return@Thread
             }
 
-            val filterPrefs = getSharedPreferences("syncdrive_filter_prefs", Context.MODE_PRIVATE)
-            val includeAllChunks = filterPrefs.getBoolean("pref_include_all_chunks", false)
-            val scanner = FileScanner(includeAllChunks = includeAllChunks)
+            val scanner = FileScanner()
             val scannedFiles = scanner.scan(root)
 
             runOnUiThread {
