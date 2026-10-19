@@ -108,8 +108,7 @@ class SyncWorker(
     private data class UploadTask(
         val scanned: FileScanner.ScannedFile,
         val pair: SyncPair,
-        val driveFolderId: String,
-        val existingDriveId: String? = null
+        val driveFolderId: String
     )
 
     private suspend fun doSyncWork(): Result {
@@ -238,25 +237,15 @@ class SyncWorker(
 
                 for (item in itemsInFolder) {
                     val file = item.scanned.file
-                    val driveFileInfo = driveFolderFiles[file.name]
-                    val syncedRecord = syncedDao.findByPath(file.path)
+                    val driveKey = "${file.name}|${file.length()}"
+                    val existingDriveId = driveFolderFiles[driveKey]
 
-                    val isUpToDate = if (forceSync) {
-                        false
-                    } else if (driveFileInfo != null) {
-                        val sizeMatches = (driveFileInfo.size == file.length())
-                        val timestampMatches = (syncedRecord != null && syncedRecord.size == file.length() && syncedRecord.lastModified == file.lastModified())
-                        sizeMatches && (timestampMatches || syncedRecord == null)
-                    } else {
-                        false
-                    }
-
-                    if (isUpToDate && driveFileInfo != null) {
+                    if (existingDriveId != null && !forceSync) {
                         atomicSkipped.incrementAndGet()
                         verifiedInFolder.add(
                             SyncedFile(
                                 localPath = file.path,
-                                driveFileId = driveFileInfo.id,
+                                driveFileId = existingDriveId,
                                 driveFolderId = targetFolderId,
                                 size = file.length(),
                                 lastModified = file.lastModified(),
@@ -264,14 +253,7 @@ class SyncWorker(
                             )
                         )
                     } else {
-                        filesToUpload.add(
-                            UploadTask(
-                                scanned = item.scanned,
-                                pair = pair,
-                                driveFolderId = targetFolderId,
-                                existingDriveId = driveFileInfo?.id
-                            )
-                        )
+                        filesToUpload.add(UploadTask(item.scanned, pair, targetFolderId))
                     }
                 }
 
@@ -368,11 +350,7 @@ class SyncWorker(
 
                         try {
                             var lastChunkTime = 0L
-                            val fileId = uploadManager.uploadFile(
-                                localFile = file,
-                                driveFolderId = task.driveFolderId,
-                                existingDriveFileId = task.existingDriveId
-                            ) { bytesUploaded, totalBytes ->
+                            val fileId = uploadManager.uploadFile(file, task.driveFolderId) { bytesUploaded, totalBytes ->
                                 transfer.bytesUploaded = bytesUploaded
                                 val now = System.currentTimeMillis()
                                 if (now - lastChunkTime > 250) {

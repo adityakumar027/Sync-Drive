@@ -19,8 +19,7 @@ Official installation binaries for **SyncDrive** (Android).
 - **Unified Branding & App Logo**: Single modern top app bar displaying **SyncDrive** and the official logo; duplicate headers removed.
 - **Launcher Icons**: Multi-density adaptive and round launcher icons (`mdpi` through `xxxhdpi`).
 - **Complete Storage Access & Scoped Storage Bypass**: In-app folder browser and direct path resolvers ensure any directory on device can be selected without "can't use this folder" errors.
-- **Smart Drive Link Parsing**: Paste full Google Drive URLs or folder IDs with automatic extraction.
-- **In-Place File Updates for Data Consistency**: Updates existing files on Drive rather than creating duplicate copies.
+- **High-Performance Upload Mechanism from DriveSyncFix.apk**: Restored the original fast uploading mechanism with 1-API-call folder batch listing, O(1) in-memory hash verification, direct upload for files <5MB, and 8MB chunked resumable upload for larger files.
 - **Material 3 Interface**: Elevated cards, real-time progress indicators, transfer stats, and clean tab navigation.
 
 ---

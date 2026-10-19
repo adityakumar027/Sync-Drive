@@ -25,18 +25,13 @@ class DriveFolderResolver(
         private const val PAGE_SIZE = 1000
     }
 
-    data class DriveFileInfo(
-        val id: String,
-        val size: Long
-    )
-
     // Thread-safe caches
     private val folderCache = ConcurrentHashMap<String, String>().apply {
         put("", rootFolderId)
     }
 
-    // folderId -> Map<fileName -> DriveFileInfo>
-    private val folderContentsCache = ConcurrentHashMap<String, Map<String, DriveFileInfo>>()
+    // folderId -> Map<"name|size" -> driveFileId>
+    private val folderContentsCache = ConcurrentHashMap<String, Map<String, String>>()
 
     // Reuse a single Drive service instance with backoff and retry
     private val driveService: Drive by lazy {
@@ -97,23 +92,25 @@ class DriveFolderResolver(
     }
 
     /**
-     * Checks if a file with this name exists on Drive.
+     * Checks if a file with this name and size exists on Drive.
+     * On first call per folder, batch-fetches ALL files (paginated).
+     * Subsequent lookups are instant HashMap lookups.
      */
-    fun findExistingFile(folderId: String, fileName: String): DriveFileInfo? {
+    fun findExistingFile(folderId: String, fileName: String, fileSize: Long): String? {
         val contents = getFolderContents(folderId)
-        return contents[fileName]
+        return contents["$fileName|$fileSize"]
     }
 
     /**
      * Batch-fetch ALL files in a Drive folder using the client library.
-     * Returns a map of fileName -> DriveFileInfo(id, size).
+     * Returns a map of "name|size" -> driveFileId.
      */
     @Synchronized
-    fun getFolderContents(folderId: String): Map<String, DriveFileInfo> {
+    fun getFolderContents(folderId: String): Map<String, String> {
         folderContentsCache[folderId]?.let { return it }
 
         val drive = driveService
-        val fileMap = mutableMapOf<String, DriveFileInfo>()
+        val fileMap = mutableMapOf<String, String>()
         var pageToken: String? = null
         var totalFetched = 0
 
@@ -127,9 +124,9 @@ class DriveFolderResolver(
                     .execute()
 
                 for (file in result.files ?: emptyList()) {
-                    val size = file.getSize() ?: 0L
-                    if (file.name != null && file.id != null) {
-                        fileMap[file.name] = DriveFileInfo(file.id, size)
+                    val size = file.getSize()
+                    if (size != null) {
+                        fileMap["${file.name}|$size"] = file.id
                     }
                     totalFetched++
                 }
@@ -148,7 +145,7 @@ class DriveFolderResolver(
     @Synchronized
     fun addToCache(folderId: String, fileName: String, fileSize: Long, fileId: String) {
         val contents = (folderContentsCache[folderId] ?: emptyMap()).toMutableMap()
-        contents[fileName] = DriveFileInfo(fileId, fileSize)
+        contents["$fileName|$fileSize"] = fileId
         folderContentsCache[folderId] = contents
     }
 

@@ -21,7 +21,6 @@ import java.io.IOException
  *   - Automatic token refresh & retry on 401 (Expired Token)
  *   - Automatic retry on IOExceptions (SocketTimeout, network dropouts)
  *   - Direct upload for small files (<5MB), chunked resumable upload for large files (no size limit)
- *   - In-place file update when file already exists on Drive to maintain true data consistency without duplicates
  */
 class DriveUploadManager(
     private val context: Context,
@@ -75,13 +74,12 @@ class DriveUploadManager(
     }
 
     /**
-     * Uploads or updates a file on Drive. Handles files of any size with automatic retries.
-     * If [existingDriveFileId] is provided, updates the existing file in-place on Drive.
+     * Uploads a file to Drive. Handles files of any size with automatic retries.
+     * Throws an exception if all retries are exhausted or file is unreadable.
      */
     fun uploadFile(
         localFile: File,
         driveFolderId: String,
-        existingDriveFileId: String? = null,
         progressListener: ((bytesUploaded: Long, totalBytes: Long) -> Unit)? = null
     ): String {
         if (!localFile.exists()) {
@@ -96,7 +94,7 @@ class DriveUploadManager(
 
         while (attempt < 3) {
             try {
-                return executeUpload(localFile, driveFolderId, existingDriveFileId, progressListener)
+                return executeUpload(localFile, driveFolderId, progressListener)
             } catch (e: Exception) {
                 lastException = e
                 attempt++
@@ -116,67 +114,36 @@ class DriveUploadManager(
     private fun executeUpload(
         localFile: File,
         driveFolderId: String,
-        existingDriveFileId: String?,
         progressListener: ((bytesUploaded: Long, totalBytes: Long) -> Unit)?
     ): String {
         val mimeType = guessMimeType(localFile)
-        val mediaContent = FileContent(mimeType, localFile)
 
-        val uploader: com.google.api.client.googleapis.media.MediaHttpUploader
-        val driveFileId: String
-
-        if (existingDriveFileId != null) {
-            // Update existing file on Drive in-place
-            val fileMetadata = DriveFile().apply {
-                name = localFile.name
-            }
-            val request = driveService.files().update(existingDriveFileId, fileMetadata, mediaContent)
-                .setFields("id")
-
-            uploader = request.mediaHttpUploader
-            if (localFile.length() < DIRECT_UPLOAD_LIMIT) {
-                uploader.isDirectUploadEnabled = true
-            } else {
-                uploader.isDirectUploadEnabled = false
-                uploader.chunkSize = CHUNK_SIZE
-            }
-
-            if (progressListener != null) {
-                uploader.setProgressListener { progress ->
-                    progressListener(progress.numBytesUploaded, localFile.length())
-                }
-            }
-
-            val driveFile = request.execute()
-            driveFileId = driveFile.id
-        } else {
-            // Create new file under driveFolderId
-            val fileMetadata = DriveFile().apply {
-                name = localFile.name
-                parents = listOf(driveFolderId)
-            }
-            val request = driveService.files().create(fileMetadata, mediaContent)
-                .setFields("id")
-
-            uploader = request.mediaHttpUploader
-            if (localFile.length() < DIRECT_UPLOAD_LIMIT) {
-                uploader.isDirectUploadEnabled = true
-            } else {
-                uploader.isDirectUploadEnabled = false
-                uploader.chunkSize = CHUNK_SIZE
-            }
-
-            if (progressListener != null) {
-                uploader.setProgressListener { progress ->
-                    progressListener(progress.numBytesUploaded, localFile.length())
-                }
-            }
-
-            val driveFile = request.execute()
-            driveFileId = driveFile.id
+        val fileMetadata = DriveFile().apply {
+            name = localFile.name
+            parents = listOf(driveFolderId)
         }
 
-        return driveFileId
+        val mediaContent = FileContent(mimeType, localFile)
+
+        val request = driveService.files().create(fileMetadata, mediaContent)
+            .setFields("id")
+
+        val uploader = request.mediaHttpUploader
+        if (localFile.length() < DIRECT_UPLOAD_LIMIT) {
+            uploader.isDirectUploadEnabled = true
+        } else {
+            uploader.isDirectUploadEnabled = false
+            uploader.chunkSize = CHUNK_SIZE
+        }
+
+        if (progressListener != null) {
+            uploader.setProgressListener { progress ->
+                progressListener(progress.numBytesUploaded, localFile.length())
+            }
+        }
+
+        val driveFile = request.execute()
+        return driveFile.id
     }
 
     private fun guessMimeType(file: File): String {
