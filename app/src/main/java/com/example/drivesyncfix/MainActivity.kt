@@ -1,23 +1,29 @@
 package com.example.drivesyncfix
 
 import android.app.AlertDialog
+import android.content.ContentUris
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.provider.DocumentsContract
+import android.provider.MediaStore
 import android.provider.Settings
+import android.util.Log
 import android.view.View
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.work.*
-import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.example.drivesyncfix.databinding.ActivityMainBinding
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -31,7 +37,7 @@ class MainActivity : AppCompatActivity() {
     private var isSyncing = false
 
     private val signInLauncher = registerForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+        ActivityResultContracts.StartActivityForResult()
     ) { result ->
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
         runCatching { task.getResult(com.google.android.gms.common.api.ApiException::class.java) }
@@ -40,12 +46,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val folderPickerLauncher = registerForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+        ActivityResultContracts.StartActivityForResult()
     ) { result ->
         val treeUri = result.data?.data ?: return@registerForActivityResult
+        runCatching {
+            contentResolver.takePersistableUriPermission(
+                treeUri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+        }
         val localFile = treeUriToFile(treeUri)
-        if (localFile == null) {
-            Toast.makeText(this, "Couldn't resolve that folder to a local path (only internal storage folders are supported)", Toast.LENGTH_LONG).show()
+        if (localFile == null || !localFile.exists()) {
+            AlertDialog.Builder(this)
+                .setTitle("Folder Access Restricted")
+                .setMessage("Android's system file picker restricted access to that folder.\n\nWould you like to select the folder using the built-in Device Folder Browser instead?")
+                .setPositiveButton("Open Folder Browser") { _, _ ->
+                    showFolderBrowser(Environment.getExternalStorageDirectory())
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
             return@registerForActivityResult
         }
         promptForDriveDestination(localFile)
@@ -82,11 +101,16 @@ class MainActivity : AppCompatActivity() {
         binding.btnScheduleDaily.setOnClickListener { scheduleDailySync() }
 
         binding.btnViewHistory.setOnClickListener {
-            startActivity(Intent(this, SyncHistoryActivity::class.java))
+            switchTab(2)
+            binding.bottomNav.selectedItemId = R.id.nav_history
         }
 
         binding.btnRetryFailed.setOnClickListener {
             startRetryFailedSync()
+        }
+
+        binding.btnHeaderSync.setOnClickListener {
+            triggerSyncNow()
         }
 
         binding.bottomNav.setOnItemSelectedListener { item ->
@@ -122,13 +146,16 @@ class MainActivity : AppCompatActivity() {
         binding.layoutTabHistory.visibility = if (tabIndex == 2) View.VISIBLE else View.GONE
 
         when (tabIndex) {
-            0 -> binding.toolbar.title = "DriveSync • Status"
+            0 -> {
+                val acc = AuthManager.getLastSignedInAccount(this)
+                binding.tvHeaderSubtitle.text = acc?.email ?: "Google Drive Cloud Sync"
+            }
             1 -> {
-                binding.toolbar.title = "DriveSync • Synced Folders"
+                binding.tvHeaderSubtitle.text = "Synced Folder Pairs"
                 refreshPairsList()
             }
             2 -> {
-                binding.toolbar.title = "DriveSync • History"
+                binding.tvHeaderSubtitle.text = "Transfer & Activity History"
                 loadHistoryTabLogs()
             }
         }
@@ -178,17 +205,21 @@ class MainActivity : AppCompatActivity() {
     private fun updateSignInState() {
         val account = AuthManager.getLastSignedInAccount(this)
         binding.tvStatus.text = if (account != null) {
-            "Signed in as ${account.email}"
+            "Connected: ${account.email}"
         } else {
             getString(R.string.not_signed_in)
         }
+        if (binding.layoutTabStatus.visibility == View.VISIBLE) {
+            binding.tvHeaderSubtitle.text = account?.email ?: "Google Drive Cloud Sync"
+        }
         binding.btnSyncNow.isEnabled = account != null
         binding.btnScheduleDaily.isEnabled = account != null
+        binding.btnHeaderSync.isEnabled = account != null
 
         // Show/hide storage permission card
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             binding.cardStoragePermission.visibility =
-                if (android.os.Environment.isExternalStorageManager()) View.GONE else View.VISIBLE
+                if (Environment.isExternalStorageManager()) View.GONE else View.VISIBLE
         } else {
             binding.cardStoragePermission.visibility = View.GONE
         }
@@ -200,7 +231,6 @@ class MainActivity : AppCompatActivity() {
     // ═══════ Sync status observation ═══════
 
     private fun observeSyncWork() {
-        // Observe the manual sync work
         WorkManager.getInstance(this)
             .getWorkInfosForUniqueWorkLiveData(SyncWorker.WORK_NAME_MANUAL_SYNC)
             .observe(this, Observer { workInfos ->
@@ -208,7 +238,6 @@ class MainActivity : AppCompatActivity() {
                 handleWorkInfo(workInfo)
             })
 
-        // Also observe periodic sync
         WorkManager.getInstance(this)
             .getWorkInfosForUniqueWorkLiveData("daily_sync")
             .observe(this, Observer { workInfos ->
@@ -267,9 +296,12 @@ class MainActivity : AppCompatActivity() {
                             binding.progressBarSync.visibility = View.VISIBLE
                             binding.progressBarSync.max = total
                             binding.progressBarSync.progress = done
-
+                            val percent = (done * 100) / total
                             binding.tvSyncProgress.visibility = View.VISIBLE
-                            binding.tvSyncProgress.text = "$done of $total files processed"
+                            binding.tvSyncProgress.text = "$done of $total files ($percent%)"
+                        } else {
+                            binding.progressBarSync.visibility = View.GONE
+                            binding.tvSyncProgress.visibility = View.GONE
                         }
 
                         if (currentFile.isNotEmpty()) {
@@ -279,7 +311,6 @@ class MainActivity : AppCompatActivity() {
                             binding.tvCurrentFile.visibility = View.GONE
                         }
 
-                        // Render active simultaneous upload slots
                         if (activeCount > 0) {
                             binding.layoutActiveTransfers.visibility = View.VISIBLE
                             binding.tvActiveTransfersTitle.text = "Active Uploads ($activeCount simultaneous)"
@@ -298,7 +329,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-
             WorkInfo.State.SUCCEEDED -> {
                 isSyncing = false
                 binding.btnSyncNow.text = getString(R.string.sync_now)
@@ -314,7 +344,7 @@ class MainActivity : AppCompatActivity() {
                 val failed = output.getInt(SyncWorker.KEY_FILES_FAILED, 0)
                 val total = output.getInt(SyncWorker.KEY_FILES_TOTAL, 0)
 
-                binding.tvSyncStatusLabel.text = "✓ ${getString(R.string.sync_complete)}"
+                binding.tvSyncStatusLabel.text = "✓ " + getString(R.string.sync_complete)
                 binding.tvSyncProgress.visibility = View.VISIBLE
                 binding.tvSyncProgress.text = "$total files processed"
 
@@ -325,13 +355,13 @@ class MainActivity : AppCompatActivity() {
 
                 updateRetryFailedButton()
             }
-
             WorkInfo.State.FAILED -> {
                 isSyncing = false
                 binding.btnSyncNow.text = getString(R.string.sync_now)
                 binding.cardSyncStatus.visibility = View.VISIBLE
                 binding.progressSpinner.visibility = View.GONE
                 binding.progressBarSync.visibility = View.GONE
+                binding.tvCurrentFile.visibility = View.GONE
                 binding.layoutActiveTransfers.visibility = View.GONE
 
                 val error = workInfo.outputData.getString("error") ?: "Unknown error"
@@ -352,7 +382,6 @@ class MainActivity : AppCompatActivity() {
 
                 updateRetryFailedButton()
             }
-
             WorkInfo.State.CANCELLED -> {
                 isSyncing = false
                 binding.btnSyncNow.text = getString(R.string.sync_now)
@@ -362,8 +391,7 @@ class MainActivity : AppCompatActivity() {
                 binding.layoutActiveTransfers.visibility = View.GONE
                 updateRetryFailedButton()
             }
-
-            else -> { /* ENQUEUED, BLOCKED */ }
+            else -> {}
         }
     }
 
@@ -391,16 +419,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         val request = OneTimeWorkRequestBuilder<SyncWorker>()
-            .setInputData(
-                workDataOf(SyncWorker.KEY_RETRY_FAILED_ONLY to true)
-            )
+            .setInputData(workDataOf(SyncWorker.KEY_RETRY_FAILED_ONLY to true))
             .setConstraints(
                 Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)
                     .build()
             )
             .build()
-
         WorkManager.getInstance(this).enqueueUniqueWork(
             SyncWorker.WORK_NAME_MANUAL_SYNC,
             ExistingWorkPolicy.REPLACE,
@@ -430,6 +455,7 @@ class MainActivity : AppCompatActivity() {
             val bytes = parts[1].toLongOrNull() ?: 0L
             val total = parts[2].toLongOrNull() ?: 0L
             val percent = if (total > 0) ((bytes * 100) / total).toInt() else 0
+
             slotLayout.visibility = View.VISIBLE
             tvName.text = name
             tvProgress.text = "${formatFileSize(bytes)} / ${formatFileSize(total)} ($percent%)"
@@ -464,7 +490,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun requestAllFilesAccess() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (!android.os.Environment.isExternalStorageManager()) {
+            if (!Environment.isExternalStorageManager()) {
                 val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
                 intent.data = Uri.parse("package:$packageName")
                 startActivity(intent)
@@ -478,37 +504,93 @@ class MainActivity : AppCompatActivity() {
 
     private fun openFolderPicker() {
         val options = arrayOf(
-            "📂 Internal Storage (root)",
-            "📸 DCIM",
+            "📂 Browse Device Folders…",
+            "📸 Camera (DCIM)",
             "📥 Downloads",
-            "🔍 Browse with picker…",
+            "🖼️ Pictures",
+            "📄 Documents",
+            "💾 Internal Storage (Root)",
+            "🔍 System File Picker…",
             "✏️ Enter path manually…"
         )
         AlertDialog.Builder(this)
             .setTitle("Select folder to sync")
             .setItems(options) { _, which ->
                 when (which) {
-                    0 -> promptForDriveDestination(android.os.Environment.getExternalStorageDirectory())
-                    1 -> promptForDriveDestination(File(android.os.Environment.getExternalStorageDirectory(), "DCIM"))
-                    2 -> promptForDriveDestination(File(android.os.Environment.getExternalStorageDirectory(), "Download"))
-                    3 -> {
+                    0 -> showFolderBrowser(Environment.getExternalStorageDirectory())
+                    1 -> promptForDriveDestination(File(Environment.getExternalStorageDirectory(), "DCIM"))
+                    2 -> promptForDriveDestination(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS))
+                    3 -> promptForDriveDestination(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES))
+                    4 -> promptForDriveDestination(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS))
+                    5 -> promptForDriveDestination(Environment.getExternalStorageDirectory())
+                    6 -> {
                         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
                         folderPickerLauncher.launch(intent)
                     }
-                    4 -> promptForManualPath()
+                    7 -> promptForManualPath()
                 }
             }
+            .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    private fun showFolderBrowser(currentDir: File) {
+        val rootDir = Environment.getExternalStorageDirectory()
+        val dir = if (currentDir.exists() && currentDir.isDirectory) currentDir else rootDir
+
+        val subDirs = (dir.listFiles { f -> f.isDirectory && !f.name.startsWith(".") } ?: emptyArray())
+            .sortedBy { it.name.lowercase() }
+            .toMutableList()
+
+        val items = mutableListOf<String>()
+        val itemFiles = mutableListOf<File?>()
+
+        val canGoUp = dir.path != rootDir.path && dir.parentFile != null && dir.path.startsWith("/storage")
+        if (canGoUp) {
+            items.add("⬆️  .. (Go up)")
+            itemFiles.add(dir.parentFile)
+        }
+
+        for (sub in subDirs) {
+            val count = sub.listFiles()?.size ?: 0
+            items.add("📁  ${sub.name}  ($count items)")
+            itemFiles.add(sub)
+        }
+
+        val title = if (dir.path == rootDir.path) "📂 Internal Storage" else "📂 ${dir.name}"
+        val message = "Current location:\n${dir.path}"
+
+        val builder = AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+
+        if (items.isEmpty()) {
+            builder.setMessage("$message\n\n(No subfolders found)")
+        } else {
+            builder.setItems(items.toTypedArray()) { _, which ->
+                val selected = itemFiles[which]
+                if (selected != null) {
+                    showFolderBrowser(selected)
+                }
+            }
+        }
+
+        builder.setPositiveButton("✔ Select This Folder") { _, _ ->
+            promptForDriveDestination(dir)
+        }
+        builder.setNegativeButton("Cancel", null)
+        builder.show()
     }
 
     private fun promptForManualPath() {
         val input = EditText(this).apply {
             hint = "/storage/emulated/0/MyFolder"
-            setText("/storage/emulated/0/")
+            setText(Environment.getExternalStorageDirectory().path + "/")
+            setSelection(text.length)
         }
         AlertDialog.Builder(this)
             .setTitle("Enter folder path")
-            .setMessage("Type the full path of the device folder you want to sync.")
+            .setMessage("Type or paste the full device path of the folder you want to sync.")
             .setView(input)
             .setPositiveButton("Next") { _, _ ->
                 val path = input.text.toString().trim()
@@ -524,32 +606,191 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun treeUriToFile(treeUri: Uri): File? {
-        val docId = DocumentsContract.getTreeDocumentId(treeUri)
-        val parts = docId.split(":")
-        if (parts.isEmpty()) return null
-        val volume = parts[0]
-        val relativePath = if (parts.size > 1) parts[1] else ""
+        try {
+            val authority = treeUri.authority ?: ""
 
-        return if (volume == "primary") {
-            val base = android.os.Environment.getExternalStorageDirectory()
-            if (relativePath.isEmpty()) base else File(base, relativePath)
-        } else {
+            if (treeUri.scheme == "file") {
+                treeUri.path?.let { path ->
+                    val f = File(path)
+                    if (f.exists()) return f
+                }
+            }
+
+            var docId: String? = null
+            if (DocumentsContract.isTreeUri(treeUri)) {
+                docId = runCatching { DocumentsContract.getTreeDocumentId(treeUri) }.getOrNull()
+            }
+            if (docId == null) {
+                docId = runCatching { DocumentsContract.getDocumentId(treeUri) }.getOrNull()
+            }
+
+            if (docId == null) {
+                val path = treeUri.path ?: ""
+                if (path.contains("/tree/")) {
+                    docId = Uri.decode(path.substringAfter("/tree/").substringBefore("/document/"))
+                } else if (path.contains("/document/")) {
+                    docId = Uri.decode(path.substringAfter("/document/"))
+                }
+            }
+
+            if (authority == "com.android.externalstorage.documents" || authority.contains("externalstorage")) {
+                if (docId != null) {
+                    val parts = docId.split(":")
+                    val volume = parts[0]
+                    val relativePath = if (parts.size > 1) parts[1] else ""
+
+                    if (volume.equals("primary", ignoreCase = true)) {
+                        val base = Environment.getExternalStorageDirectory()
+                        return if (relativePath.isEmpty()) base else File(base, relativePath)
+                    } else {
+                        val candidates = listOf(
+                            File("/storage/$volume/$relativePath"),
+                            File("/mnt/media_rw/$volume/$relativePath")
+                        )
+                        for (candidate in candidates) {
+                            if (candidate.exists()) return candidate
+                        }
+                        File("/storage").listFiles()?.firstOrNull { it.name.equals(volume, ignoreCase = true) }?.let {
+                            return if (relativePath.isEmpty()) it else File(it, relativePath)
+                        }
+                        return File("/storage/$volume/$relativePath")
+                    }
+                }
+            }
+
+            if (authority == "com.android.providers.downloads.documents" || authority.contains("downloads")) {
+                if (docId != null) {
+                    if (docId.startsWith("raw:")) {
+                        val rawPath = docId.substringAfter("raw:")
+                        return File(rawPath)
+                    }
+                    if (docId.startsWith("/storage/")) {
+                        return File(docId)
+                    }
+                    val downloadId = docId.substringAfterLast(":")
+                    if (downloadId.toLongOrNull() != null) {
+                        val contentUri = ContentUris.withAppendedId(
+                            Uri.parse("content://downloads/public_downloads"),
+                            downloadId.toLong()
+                        )
+                        getDataColumn(contentUri)?.let { return File(it) }
+                    }
+                }
+                val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                if (downloadDir.exists()) return downloadDir
+            }
+
+            if (authority == "com.android.providers.media.documents" || authority.contains("media")) {
+                if (docId != null) {
+                    val parts = docId.split(":")
+                    val type = parts.getOrNull(0)
+                    val id = parts.getOrNull(1)?.toLongOrNull()
+                    if (id != null) {
+                        val contentUri = when (type) {
+                            "image" -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                            "video" -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                            "audio" -> MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                            else -> MediaStore.Files.getContentUri("external")
+                        }
+                        val itemUri = ContentUris.withAppendedId(contentUri, id)
+                        getDataColumn(itemUri)?.let { path ->
+                            val f = File(path)
+                            return if (f.isDirectory) f else f.parentFile
+                        }
+                    }
+                }
+            }
+
+            getDataColumn(treeUri)?.let { path ->
+                val f = File(path)
+                return if (f.isDirectory) f else f.parentFile
+            }
+
+            val decoded = Uri.decode(treeUri.toString())
+            if (decoded.contains("/storage/")) {
+                val sub = decoded.substring(decoded.indexOf("/storage/"))
+                val cleaned = sub.substringBefore("?").substringBefore("#").trim()
+                val f = File(cleaned)
+                if (f.exists()) return f
+            }
+
+            if (docId != null && docId.contains("primary:")) {
+                val rel = docId.substringAfter("primary:")
+                return File(Environment.getExternalStorageDirectory(), rel)
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Failed to resolve tree URI", e)
+        }
+        return null
+    }
+
+    private fun getDataColumn(uri: Uri): String? {
+        return try {
+            contentResolver.query(uri, arrayOf(MediaStore.MediaColumns.DATA), null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val idx = cursor.getColumnIndex(MediaStore.MediaColumns.DATA)
+                    if (idx != -1) cursor.getString(idx) else null
+                } else null
+            }
+        } catch (_: Exception) {
             null
         }
     }
 
-    private fun promptForDriveDestination(localFolder: File) {
-        val input = EditText(this).apply {
-            hint = "Drive folder ID for this folder (from its URL)"
+    private fun extractDriveFolderId(rawInput: String): String {
+        val trimmed = rawInput.trim()
+        if (trimmed.isEmpty()) return ""
+        val folderRegex = Regex(".*/folders/([a-zA-Z0-9_-]+).*")
+        val folderMatch = folderRegex.find(trimmed)
+        if (folderMatch != null) {
+            return folderMatch.groupValues[1]
         }
+        val idRegex = Regex(".*[?&]id=([a-zA-Z0-9_-]+).*")
+        val idMatch = idRegex.find(trimmed)
+        if (idMatch != null) {
+            return idMatch.groupValues[1]
+        }
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+            val lastSegment = trimmed.substringBefore("?").substringBefore("#").substringAfterLast("/")
+            if (lastSegment.isNotEmpty() && lastSegment != "folders") {
+                return lastSegment
+            }
+        }
+        return trimmed.substringBefore("?").substringBefore("#")
+    }
+
+    private fun promptForDriveDestination(localFolder: File) {
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            val pad = (20 * resources.displayMetrics.density).toInt()
+            setPadding(pad, (12 * resources.displayMetrics.density).toInt(), pad, 0)
+        }
+
+        val explanation = TextView(this).apply {
+            text = "Copy your Google Drive folder's link or ID and paste it below:\n\n" +
+                   "📌 Example URL:\n" +
+                   "https://drive.google.com/drive/folders/1A2B3C-xyz123...\n\n" +
+                   "💡 Tip: You can paste the entire link. The folder ID will be extracted automatically!"
+            textSize = 13.5f
+            setPadding(0, 0, 0, (12 * resources.displayMetrics.density).toInt())
+        }
+
+        val input = EditText(this).apply {
+            hint = "Paste Drive folder link or ID here"
+            isSingleLine = true
+        }
+
+        container.addView(explanation)
+        container.addView(input)
+
         AlertDialog.Builder(this)
-            .setTitle("Sync \"${localFolder.name}\" to which Drive folder?")
-            .setMessage("Paste the destination Drive folder's ID (the part after /folders/ in its URL). Files from \"${localFolder.name}\" will mirror into this folder.")
-            .setView(input)
+            .setTitle("Sync \"${localFolder.name}\" to Drive")
+            .setView(container)
             .setPositiveButton("Add") { _, _ ->
-                val driveFolderId = input.text.toString().trim()
+                val raw = input.text.toString()
+                val driveFolderId = extractDriveFolderId(raw)
                 if (driveFolderId.isEmpty()) {
-                    Toast.makeText(this, "Drive folder ID is required", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Drive folder ID or link is required", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
                 addPair(localFolder, driveFolderId)
@@ -592,7 +833,6 @@ class MainActivity : AppCompatActivity() {
     // ═══════ Sync triggers ═══════
 
     private fun triggerSyncNow() {
-        // Warn if no sync pairs configured
         Thread {
             val pairs = db.syncPairDao().getAll()
             runOnUiThread {
@@ -612,7 +852,6 @@ class MainActivity : AppCompatActivity() {
                     SyncWorker.WORK_NAME_MANUAL_SYNC, ExistingWorkPolicy.REPLACE, request
                 )
 
-                // Show the status card immediately
                 binding.cardSyncStatus.visibility = View.VISIBLE
                 binding.tvSyncStatusLabel.text = "Starting sync…"
                 binding.progressSpinner.visibility = View.VISIBLE

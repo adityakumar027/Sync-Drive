@@ -3,8 +3,9 @@
 *.ap_
 *.aab
 
-# But keep the release APK
-!releases/*.apk
+# Keep release APKs and version archives
+!releases/
+!releases/**
 
 # Files for the ART/Dalvik VM
 *.dex

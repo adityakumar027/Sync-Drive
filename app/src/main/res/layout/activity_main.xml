@@ -6,15 +6,68 @@
     android:orientation="vertical"
     android:background="?android:attr/colorBackground">
 
-    <!-- ═══════ Top App Bar (matching reference app) ═══════ -->
+    <!-- ═══════ Modern SyncDrive Branded Top Bar ═══════ -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="64dp"
         android:background="?attr/colorSurface"
-        android:elevation="2dp"
-        app:title="Autosync for Google Drive"
-        app:titleTextAppearance="@style/TextAppearance.Material3.TitleMedium" />
+        app:contentInsetStart="16dp"
+        app:contentInsetEnd="16dp"
+        app:elevation="3dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- App Logo -->
+            <ImageView
+                android:id="@+id/ivHeaderLogo"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:src="@drawable/ic_syncdrive_logo"
+                android:contentDescription="SyncDrive Logo" />
+
+            <!-- Title & Subtitle -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="12dp">
+
+                <TextView
+                    android:id="@+id/tvHeaderTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SyncDrive"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:textColorPrimary"
+                    android:letterSpacing="-0.01" />
+
+                <TextView
+                    android:id="@+id/tvHeaderSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Google Drive Cloud Sync"
+                    android:textSize="12sp"
+                    android:textColor="?android:textColorSecondary" />
+            </LinearLayout>
+
+            <!-- Quick Sync Button in Header -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnHeaderSync"
+                style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                app:icon="@android:drawable/ic_menu_rotate"
+                android:contentDescription="Quick Sync" />
+
+        </LinearLayout>
+    </com.google.android.material.appbar.MaterialToolbar>
 
     <!-- ═══════ Main Content Tabs Container ═══════ -->
     <FrameLayout
@@ -24,7 +77,7 @@
         android:layout_weight="1">
 
         <!-- ════════════════════════════════════════════════════════════ -->
-        <!-- TAB 1: STATUS (matching reference app status_fragment.xml)  -->
+        <!-- TAB 1: STATUS / DASHBOARD                                    -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <ScrollView
             android:id="@+id/layoutTabStatus"
@@ -38,42 +91,58 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- ── Account Info Card ── -->
+                <!-- ── Google Account Card ── -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/cardAccount"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardElevation="1dp"
-                    app:cardCornerRadius="12dp">
+                    app:cardElevation="2dp"
+                    app:cardCornerRadius="16dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#1F808080">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
                         android:padding="16dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Google Account"
-                            android:textStyle="bold"
-                            android:textSize="14sp"
-                            android:textColor="?attr/colorPrimary" />
+                        <ImageView
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:src="@drawable/ic_syncdrive_logo"
+                            android:contentDescription="Account" />
 
-                        <TextView
-                            android:id="@+id/tvStatus"
-                            android:layout_width="match_parent"
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="@string/not_signed_in"
-                            android:textSize="13sp"
-                            android:textColor="?android:textColorSecondary" />
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="14dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Google Account"
+                                android:textStyle="bold"
+                                android:textSize="14sp"
+                                android:textColor="?attr/colorPrimary" />
+
+                            <TextView
+                                android:id="@+id/tvStatus"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="@string/not_signed_in"
+                                android:textSize="13sp"
+                                android:textColor="?android:textColorSecondary" />
+                        </LinearLayout>
 
                         <Button
                             android:id="@+id/btnSignIn"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
                             android:text="@string/sign_in"
                             style="@style/Widget.Material3.Button.TonalButton" />
 
@@ -86,8 +155,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    app:cardElevation="1dp"
-                    app:cardCornerRadius="12dp"
+                    app:cardElevation="2dp"
+                    app:cardCornerRadius="16dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#FFB74D"
                     android:visibility="gone">
 
                     <LinearLayout
@@ -101,6 +172,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/storage_permission_header"
                             android:textStyle="bold"
+                            android:textColor="#E65100"
                             android:textSize="14sp" />
 
                         <TextView
@@ -122,14 +194,16 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- ── Sync Status Card (matching sync_status_view.xml) ── -->
+                <!-- ── Sync Status Card ── -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/cardSyncStatus"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    app:cardElevation="1dp"
-                    app:cardCornerRadius="12dp">
+                    android:layout_marginTop="14dp"
+                    app:cardElevation="2dp"
+                    app:cardCornerRadius="16dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#1F808080">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -148,14 +222,15 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:textSize="15sp"
+                                android:textSize="16sp"
                                 android:textStyle="bold"
+                                android:textColor="?android:textColorPrimary"
                                 android:text="@string/sync_idle" />
 
                             <ProgressBar
                                 android:id="@+id/progressSpinner"
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
                                 android:visibility="gone"
                                 style="?android:attr/progressBarStyleSmall" />
                         </LinearLayout>
@@ -163,8 +238,8 @@
                         <ProgressBar
                             android:id="@+id/progressBarSync"
                             android:layout_width="match_parent"
-                            android:layout_height="6dp"
-                            android:layout_marginTop="10dp"
+                            android:layout_height="8dp"
+                            android:layout_marginTop="12dp"
                             android:visibility="gone"
                             style="@style/Widget.AppCompat.ProgressBar.Horizontal" />
 
@@ -172,36 +247,37 @@
                             android:id="@+id/tvSyncProgress"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:textSize="12sp"
-                            android:textColor="?android:textColorSecondary"
+                            android:layout_marginTop="8dp"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="?attr/colorPrimary"
                             android:visibility="gone" />
 
                         <TextView
                             android:id="@+id/tvCurrentFile"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:textSize="11sp"
+                            android:layout_marginTop="4dp"
+                            android:textSize="12sp"
                             android:textColor="?android:textColorSecondary"
                             android:ellipsize="middle"
                             android:singleLine="true"
                             android:visibility="gone" />
 
-                        <!-- Active Simultaneous Transfers Section (matching transfer_view.xml) -->
+                        <!-- Active Simultaneous Transfers Section -->
                         <LinearLayout
                             android:id="@+id/layoutActiveTransfers"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:layout_marginTop="10dp"
+                            android:layout_marginTop="14dp"
                             android:visibility="gone">
 
                             <TextView
                                 android:id="@+id/tvActiveTransfersTitle"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:textSize="12sp"
+                                android:textSize="13sp"
                                 android:textStyle="bold"
                                 android:textColor="?attr/colorPrimary"
                                 android:text="Active Uploads (4 simultaneous)" />
@@ -212,7 +288,9 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="vertical"
-                                android:layout_marginTop="6dp"
+                                android:layout_marginTop="8dp"
+                                android:background="?attr/colorSurfaceVariant"
+                                android:padding="8dp"
                                 android:visibility="gone">
                                 <LinearLayout
                                     android:layout_width="match_parent"
@@ -237,7 +315,7 @@
                                     android:id="@+id/pbSlot0"
                                     android:layout_width="match_parent"
                                     android:layout_height="4dp"
-                                    android:layout_marginTop="2dp"
+                                    android:layout_marginTop="4dp"
                                     style="@style/Widget.AppCompat.ProgressBar.Horizontal" />
                             </LinearLayout>
 
@@ -248,6 +326,8 @@
                                 android:layout_height="wrap_content"
                                 android:orientation="vertical"
                                 android:layout_marginTop="6dp"
+                                android:background="?attr/colorSurfaceVariant"
+                                android:padding="8dp"
                                 android:visibility="gone">
                                 <LinearLayout
                                     android:layout_width="match_parent"
@@ -272,7 +352,7 @@
                                     android:id="@+id/pbSlot1"
                                     android:layout_width="match_parent"
                                     android:layout_height="4dp"
-                                    android:layout_marginTop="2dp"
+                                    android:layout_marginTop="4dp"
                                     style="@style/Widget.AppCompat.ProgressBar.Horizontal" />
                             </LinearLayout>
 
@@ -283,6 +363,8 @@
                                 android:layout_height="wrap_content"
                                 android:orientation="vertical"
                                 android:layout_marginTop="6dp"
+                                android:background="?attr/colorSurfaceVariant"
+                                android:padding="8dp"
                                 android:visibility="gone">
                                 <LinearLayout
                                     android:layout_width="match_parent"
@@ -307,7 +389,7 @@
                                     android:id="@+id/pbSlot2"
                                     android:layout_width="match_parent"
                                     android:layout_height="4dp"
-                                    android:layout_marginTop="2dp"
+                                    android:layout_marginTop="4dp"
                                     style="@style/Widget.AppCompat.ProgressBar.Horizontal" />
                             </LinearLayout>
 
@@ -318,6 +400,8 @@
                                 android:layout_height="wrap_content"
                                 android:orientation="vertical"
                                 android:layout_marginTop="6dp"
+                                android:background="?attr/colorSurfaceVariant"
+                                android:padding="8dp"
                                 android:visibility="gone">
                                 <LinearLayout
                                     android:layout_width="match_parent"
@@ -342,7 +426,7 @@
                                     android:id="@+id/pbSlot3"
                                     android:layout_width="match_parent"
                                     android:layout_height="4dp"
-                                    android:layout_marginTop="2dp"
+                                    android:layout_marginTop="4dp"
                                     style="@style/Widget.AppCompat.ProgressBar.Horizontal" />
                             </LinearLayout>
 
@@ -353,7 +437,7 @@
                             android:id="@+id/layoutSyncSummary"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
+                            android:layout_marginTop="14dp"
                             android:orientation="horizontal"
                             android:visibility="gone">
 
@@ -362,8 +446,9 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:textSize="12sp"
-                                android:textColor="#4CAF50"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:textColor="#2E7D32"
                                 android:text="↑ 0 uploaded" />
 
                             <TextView
@@ -371,18 +456,20 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:textSize="12sp"
-                                android:textColor="#FF9800"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:textColor="#E65100"
                                 android:textAlignment="center"
-                                android:text="⊘ 0 skipped" />
+                                android:text="⊘ 0 up to date" />
 
                             <TextView
                                 android:id="@+id/tvFailed"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:textSize="12sp"
-                                android:textColor="#F44336"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:textColor="#C62828"
                                 android:textAlignment="viewEnd"
                                 android:text="✕ 0 failed" />
                         </LinearLayout>
@@ -392,9 +479,9 @@
                             android:id="@+id/btnRetryFailed"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
+                            android:layout_marginTop="12dp"
                             android:text="Retry Failed Files"
-                            android:textColor="#F44336"
+                            android:textColor="#C62828"
                             style="@style/Widget.Material3.Button.OutlinedButton"
                             android:visibility="gone" />
 
@@ -405,17 +492,22 @@
                 <Button
                     android:id="@+id/btnSyncNow"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="52dp"
                     android:layout_marginTop="16dp"
                     android:text="@string/sync_now"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="26dp"
                     style="@style/Widget.Material3.Button" />
 
                 <Button
                     android:id="@+id/btnScheduleDaily"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="10dp"
                     android:text="@string/schedule_daily"
+                    android:textSize="14sp"
+                    app:cornerRadius="24dp"
                     style="@style/Widget.Material3.Button.OutlinedButton" />
 
                 <!-- Hidden legacy button so code references don't break -->
@@ -429,7 +521,7 @@
         </ScrollView>
 
         <!-- ════════════════════════════════════════════════════════════ -->
-        <!-- TAB 2: SYNCED FOLDERS (matching folder_pairs_fragment.xml)  -->
+        <!-- TAB 2: SYNCED FOLDERS                                       -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <LinearLayout
             android:id="@+id/layoutTabFolders"
@@ -444,7 +536,8 @@
                 android:layout_height="wrap_content"
                 android:text="Synced Folders"
                 android:textStyle="bold"
-                android:textSize="16sp" />
+                android:textSize="18sp"
+                android:textColor="?android:textColorPrimary" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -459,22 +552,24 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="14dp"
                 android:divider="@null"
-                android:dividerHeight="8dp" />
+                android:dividerHeight="10dp" />
 
             <Button
                 android:id="@+id/btnAddSyncFolder"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_height="52dp"
+                android:layout_marginTop="10dp"
                 android:text="+ Add Sync Folder Pair"
-                style="@style/Widget.Material3.Button.TonalButton" />
+                android:textSize="15sp"
+                app:cornerRadius="26dp"
+                style="@style/Widget.Material3.Button" />
 
         </LinearLayout>
 
         <!-- ════════════════════════════════════════════════════════════ -->
-        <!-- TAB 3: SYNC HISTORY (matching sync_history_fragment.xml)    -->
+        <!-- TAB 3: SYNC HISTORY                                         -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <LinearLayout
             android:id="@+id/layoutTabHistory"
@@ -489,7 +584,7 @@
                 android:layout_height="wrap_content"
                 android:scrollbars="none"
                 android:paddingHorizontal="16dp"
-                android:paddingVertical="8dp">
+                android:paddingVertical="10dp">
 
                 <com.google.android.material.chip.ChipGroup
                     android:id="@+id/chipGroupMain"
@@ -501,7 +596,7 @@
                         android:id="@+id/chipAllMain"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="All"
+                        android:text="All Activity"
                         android:checked="true"
                         style="@style/Widget.Material3.Chip.Filter" />
 
@@ -516,7 +611,7 @@
                         android:id="@+id/chipSkippedMain"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Skipped"
+                        android:text="Up to date"
                         style="@style/Widget.Material3.Chip.Filter" />
 
                     <com.google.android.material.chip.Chip
@@ -537,7 +632,8 @@
                 android:text="No sync history yet.\nRun a sync to see records here."
                 android:textAlignment="center"
                 android:textColor="?android:textColorSecondary"
-                android:padding="32dp"
+                android:textSize="14sp"
+                android:padding="36dp"
                 android:visibility="gone" />
 
             <!-- Sync log list -->
@@ -547,7 +643,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:clipToPadding="false"
-                android:padding="8dp" />
+                android:padding="12dp" />
 
             <!-- Action buttons at bottom of history -->
             <LinearLayout
@@ -555,22 +651,25 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:paddingHorizontal="16dp"
-                android:paddingBottom="8dp">
+                android:paddingBottom="12dp">
 
                 <Button
                     android:id="@+id/btnRetryFailedTabHistory"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="48dp"
                     android:text="Retry Failed Files"
-                    android:textColor="#F44336"
+                    android:textColor="#C62828"
+                    app:cornerRadius="24dp"
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     android:visibility="gone" />
 
                 <Button
                     android:id="@+id/btnClearHistoryMain"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="6dp"
                     android:text="Clear History"
+                    app:cornerRadius="22dp"
                     style="@style/Widget.Material3.Button.TextButton" />
 
             </LinearLayout>

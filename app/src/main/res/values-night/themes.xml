@@ -1,0 +1,26 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.SyncDrive" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Brand Colors -->
+        <item name="colorPrimary">#8AB4F8</item>
+        <item name="colorPrimaryContainer">#174EA6</item>
+        <item name="colorOnPrimary">#202124</item>
+        <item name="colorOnPrimaryContainer">#D2E3FC</item>
+        <item name="colorSecondary">#81C995</item>
+        <item name="colorSecondaryContainer">#0D652D</item>
+        <item name="colorOnSecondary">#202124</item>
+        <item name="colorOnSecondaryContainer">#CEEAD6</item>
+
+        <!-- Background & Surface -->
+        <item name="android:colorBackground">#121212</item>
+        <item name="colorSurface">#1E1E1E</item>
+        <item name="colorSurfaceVariant">#2D2E30</item>
+        <item name="colorOnSurface">#E8EAED</item>
+        <item name="colorOnSurfaceVariant">#9AA0A6</item>
+
+        <!-- Status & Navigation Bar -->
+        <item name="android:statusBarColor">#121212</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+        <item name="android:navigationBarColor">#121212</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+    </style>
+</resources>

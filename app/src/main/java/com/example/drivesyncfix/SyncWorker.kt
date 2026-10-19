@@ -108,7 +108,8 @@ class SyncWorker(
     private data class UploadTask(
         val scanned: FileScanner.ScannedFile,
         val pair: SyncPair,
-        val driveFolderId: String
+        val driveFolderId: String,
+        val existingDriveId: String? = null
     )
 
     private suspend fun doSyncWork(): Result {
@@ -237,15 +238,25 @@ class SyncWorker(
 
                 for (item in itemsInFolder) {
                     val file = item.scanned.file
-                    val driveKey = "${file.name}|${file.length()}"
-                    val existingDriveId = driveFolderFiles[driveKey]
+                    val driveFileInfo = driveFolderFiles[file.name]
+                    val syncedRecord = syncedDao.findByPath(file.path)
 
-                    if (existingDriveId != null && !forceSync) {
+                    val isUpToDate = if (forceSync) {
+                        false
+                    } else if (driveFileInfo != null) {
+                        val sizeMatches = (driveFileInfo.size == file.length())
+                        val timestampMatches = (syncedRecord != null && syncedRecord.size == file.length() && syncedRecord.lastModified == file.lastModified())
+                        sizeMatches && (timestampMatches || syncedRecord == null)
+                    } else {
+                        false
+                    }
+
+                    if (isUpToDate && driveFileInfo != null) {
                         atomicSkipped.incrementAndGet()
                         verifiedInFolder.add(
                             SyncedFile(
                                 localPath = file.path,
-                                driveFileId = existingDriveId,
+                                driveFileId = driveFileInfo.id,
                                 driveFolderId = targetFolderId,
                                 size = file.length(),
                                 lastModified = file.lastModified(),
@@ -253,7 +264,14 @@ class SyncWorker(
                             )
                         )
                     } else {
-                        filesToUpload.add(UploadTask(item.scanned, pair, targetFolderId))
+                        filesToUpload.add(
+                            UploadTask(
+                                scanned = item.scanned,
+                                pair = pair,
+                                driveFolderId = targetFolderId,
+                                existingDriveId = driveFileInfo?.id
+                            )
+                        )
                     }
                 }
 
@@ -349,7 +367,11 @@ class SyncWorker(
 
                         try {
                             var lastChunkTime = 0L
-                            val fileId = uploadManager.uploadFile(file, task.driveFolderId) { bytesUploaded, totalBytes ->
+                            val fileId = uploadManager.uploadFile(
+                                localFile = file,
+                                driveFolderId = task.driveFolderId,
+                                existingDriveFileId = task.existingDriveId
+                            ) { bytesUploaded, totalBytes ->
                                 transfer.bytesUploaded = bytesUploaded
                                 val now = System.currentTimeMillis()
                                 if (now - lastChunkTime > 250) {
@@ -498,12 +520,12 @@ class SyncWorker(
         val nm = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                NOTIFICATION_CHANNEL_ID, "Drive Sync", NotificationManager.IMPORTANCE_LOW
+                NOTIFICATION_CHANNEL_ID, "SyncDrive Sync", NotificationManager.IMPORTANCE_LOW
             )
             nm.createNotificationChannel(channel)
         }
         val notification = NotificationCompat.Builder(applicationContext, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("DriveSyncFix")
+            .setContentTitle("SyncDrive")
             .setContentText(message)
             .setSmallIcon(android.R.drawable.stat_sys_upload)
             .setOngoing(true)
